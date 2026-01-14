@@ -1,0 +1,373 @@
+import { PrismaClient } from '@prisma/client';
+import { PrismaMssql } from '@prisma/adapter-mssql';
+import * as bcrypt from 'bcrypt';
+
+// Parse SQL Server connection string format: sqlserver://server:port;database=db;user=user;password=pass;encrypt=false
+const parseSqlServerUrl = (urlString: string) => {
+  // Remove protocol
+  const withoutProtocol = urlString.replace(/^sqlserver:\/\//, '');
+  
+  // Split by semicolon to get parts
+  const parts = withoutProtocol.split(';');
+  
+  // First part contains server:port
+  const serverPart = parts[0];
+  const [server, portStr] = serverPart.includes(':') 
+    ? serverPart.split(':') 
+    : [serverPart, '1433'];
+  
+  // Parse parameters from remaining parts
+  const params: Record<string, string> = {};
+  for (let i = 1; i < parts.length; i++) {
+    const [key, value] = parts[i].split('=');
+    if (key && value) {
+      params[key.toLowerCase()] = value;
+    }
+  }
+  
+  return {
+    server,
+    port: parseInt(portStr, 10) || 1433,
+    database: params.database || '',
+    user: params.user || undefined,
+    password: params.password || undefined,
+    encrypt: params.encrypt !== 'false',
+    trustServerCertificate: params.trustservercertificate === 'true',
+  };
+};
+
+const databaseUrl = process.env.DATABASE_URL!;
+const config = parseSqlServerUrl(databaseUrl);
+
+const adapter = new PrismaMssql({
+  server: config.server,
+  port: config.port,
+  database: config.database,
+  user: config.user,
+  password: config.password,
+  options: {
+    encrypt: config.encrypt,
+    trustServerCertificate: config.trustServerCertificate,
+  },
+});
+
+const prisma = new PrismaClient({
+  adapter,
+});
+
+const SALT_ROUNDS = 10;
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, SALT_ROUNDS);
+}
+
+// Datos de catálogos del sistema basados en el archivo catalogo.json
+const catalogosData = [
+  {
+    categoria: "PLAN ESTATAL DE DESARROLLO",
+    contenidos: [
+      {
+        contenidoGeneral: "Planes Estatales de Desarrollo o equivalentes",
+        contenidosEspecificos: [
+          "Documento que contiene el Plan Estatal de Desarrollo.",
+          "Establecimiento de objetivos del Plan Estatal de Desarrollo",
+          "Desglose de acciones y responsables de ejecutarlas",
+          "Indicadores asociados a los objetivos",
+          "Líneas base de indicadores",
+          "Metas intermedias y de fin de periodo para los indicadores",
+          "Desglose de programas prioritarios y su vinculación con el presupuesto."
+        ]
+      },
+      {
+        contenidoGeneral: "Programas secundarios derivados del Plan Estatal de Desarrollo",
+        contenidosEspecificos: [
+          "Documentos que contienen los programas derivados del Plan Estatal del Desarrollo.",
+          "Vinculación de los programas derivados del Plan Estatal del Desarrollo al Plan.",
+          "Establecimiento de objetivos de los programas derivados del Plan Estatal de Desarrollo",
+          "Desglose de acciones y responsables de ejecutarlas",
+          "Indicadores asociados a los objetivos",
+          "Líneas base de indicadores",
+          "Metas intermedias y de fin de periodo para los indicadores"
+        ]
+      },
+      {
+        contenidoGeneral: "Vinculación del Presupuesto a la Planeación",
+        contenidosEspecificos: [
+          "Vinculación del Presupuesto al Plan Estatal de Desarrollo",
+          "Vinculación del Presupuesto a Objetivos de Desarrollo Sostenible"
+        ]
+      },
+      {
+        contenidoGeneral: "Seguimiento y Evaluación de Resultados",
+        contenidosEspecificos: [
+          "Seguimiento a Indicadores del Plan y de sus Programas",
+          "Evaluación de media administración del Plan y de sus Programas",
+          "Informes de seguimiento a la ejecución del Plan y sus Programas"
+        ]
+      },
+      {
+        contenidoGeneral: "Planeación del Desarrollo en Lenguaje Ciudadano",
+        contenidosEspecificos: [
+          "Publicación de versión ciudadana del Plan Estatal de Desarrollo"
+        ]
+      }
+    ]
+  },
+  {
+    categoria: "INGRESOS",
+    contenidos: [
+      {
+        contenidoGeneral: "Proyección de Ingresos en el Paquete Económico",
+        contenidosEspecificos: [
+          "Iniciativa de Ley de Ingresos",
+          "Estimación de los ingresos conforme al clasificador por rubro de ingresos (Norma para armonizar la presentación de la información adicional a la iniciativa de la Ley de Ingresos).",
+          "Proyecciones de Ingresos (Formato 7a LDF 2)",
+          "Calendario de estimación de los ingresos con base mensual conforme al clasificador por rubro de ingresos"
+        ]
+      },
+      {
+        contenidoGeneral: "Ingresos conforme a la Ley de Ingresos aprobada",
+        contenidosEspecificos: [
+          "Ley de Ingresos",
+          "Estimación de los ingresos conforme al clasificador por rubro de ingresos en Ley de Ingresos",
+          "Calendario de estimación de los ingresos con base mensual"
+        ]
+      },
+      {
+        contenidoGeneral: "Resultados de los ingresos",
+        contenidosEspecificos: [
+          "Estado Analítico de Ingresos Detallado (Formato 5 LDF)",
+          "Resultados de Ingresos (Formato 7c LDF)",
+          "Calendario de ingresos reales con base mensual y clasificador por rubro de ingresos.",
+          "Información sobre ingresos extraordinarios recibidos."
+        ]
+      },
+      {
+        contenidoGeneral: "Ingresos y destino",
+        contenidosEspecificos: [
+          "Desglose por sector de destino: educación, salud, infraestructura.",
+          "Clasificación por tipo de gasto: corriente, de capital, inversiones."
+        ]
+      },
+      {
+        contenidoGeneral: "Ingresos en Lenguaje Ciudadano",
+        contenidosEspecificos: [
+          "Difusión ciudadana de la Ley de Ingresos (Norma para la difusión a la ciudadanía de la Ley de Ingresos y del Presupuesto de Egresos)"
+        ]
+      }
+    ]
+  },
+  {
+    categoria: "DEUDA PÚBLICA",
+    contenidos: [
+      {
+        contenidoGeneral: "Informe Analítico de la Deuda Pública",
+        contenidosEspecificos: [
+          "Informe Analítico de la Deuda Pública y Otros Pasivos (Formato 2 LDF)"
+        ]
+      },
+      {
+        contenidoGeneral: "Obligaciones de Garantía o Pago",
+        contenidosEspecificos: [
+          "Detalle de los contratos de deuda, indicando términos y condiciones.",
+          "Información sobre avales otorgados por la entidad federativa.",
+          "Clasificación de las obligaciones en deuda interna y externa."
+        ]
+      },
+      {
+        contenidoGeneral: "Endeudamiento neto",
+        contenidosEspecificos: [
+          "Comparativo del saldo inicial y saldo final de la deuda pública.",
+          "Nuevos financiamientos contratados en el periodo y amortización de los existentes.",
+          "Deuda neta consolidada al cierre del periodo."
+        ]
+      },
+      {
+        contenidoGeneral: "Intereses de la deuda",
+        contenidosEspecificos: [
+          "Detalle de los intereses devengados y pagados durante el ejercicio fiscal.",
+          "Información sobre las tasas de interés aplicables a los préstamos."
+        ]
+      },
+      {
+        contenidoGeneral: "Instrumentos de contratación de financiamientos y obligaciones",
+        contenidosEspecificos: [
+          "Descripción de los contratos financieros: bonos, créditos, garantías.",
+          "Listado de los instrumentos financieros vigentes y sus condiciones."
+        ]
+      },
+      {
+        contenidoGeneral: "Propuestas de contratación de financiamiento",
+        contenidosEspecificos: [
+          "Evaluación de los costos de las diversas alternativas de financiamiento.",
+          "Análisis de riesgos asociados a cada propuesta de financiamiento."
+        ]
+      },
+      {
+        contenidoGeneral: "Obligaciones Diferentes de Financiamientos",
+        contenidosEspecificos: [
+          "Informe Analítico de Obligaciones Diferentes de Financiamientos (Formato 3 LDF)"
+        ]
+      }
+    ]
+  },
+  {
+    categoria: "PRESUPUESTO DE EGRESOS",
+    contenidos: [
+      {
+        contenidoGeneral: "Documento preliminar",
+        contenidosEspecificos: [
+          "Definición de la estrategia presupuestaria para el siguiente ejercicio fiscal"
+        ]
+      },
+      {
+        contenidoGeneral: "Proyecto de Presupuesto de Egresos",
+        contenidosEspecificos: [
+          "Proyecto de Decreto de Presupuesto de Egresos o instrumento similar",
+          "Información del Proyecto de Presupuesto en sus diferentes clasificaciones",
+          "Proyecciones de Egresos (Formato 7b LDF)",
+          "Prioridades del Gasto en el Proyecto de Presupuesto",
+          "Programas y Proyectos en el Proyecto de Presupuesto",
+          "Analítico de Plazas en el Proyecto de Presupuesto en diferentes clasificaciones"
+        ]
+      },
+      {
+        contenidoGeneral: "Presupuesto de Egresos Aprobado",
+        contenidosEspecificos: [
+          "Decreto de Presupuesto de Egresos o instrumento similar",
+          "Calendario del Presupuesto aprobado en sus diferentes clasificaciones"
+        ]
+      },
+      {
+        contenidoGeneral: "Balance presupuestario",
+        contenidosEspecificos: [
+          "Balance Presupuestario (Formato 4 LDF)",
+          "En caso de balance presupuestario de recursos disponibles negativo, informes trimestrales y en la Cuenta Pública sobre el avance de las acciones para recuperar el presupuesto sostenible de recursos disponibles."
+        ]
+      },
+      {
+        contenidoGeneral: "Ejercicio del Presupuesto",
+        contenidosEspecificos: [
+          "Estado Analítico del Ejercicio del Presupuesto de Egresos Detallado en sus diferentes clasificaciones (Incluye formatos 6a, 6b y 6c de LDF)",
+          "Resultados de Egresos (Formato 7d LDF)",
+          "Información sobre las adecuaciones y transferencias presupuestarias."
+        ]
+      },
+      {
+        contenidoGeneral: "Presupuesto en Lenguaje Ciudadano",
+        contenidosEspecificos: [
+          "Difusión ciudadana del Presupuesto de Egresos (proyecto, aprobado, ejercicio)"
+        ]
+      },
+      {
+        contenidoGeneral: "Evaluación del Desempeño",
+        contenidosEspecificos: [
+          "Indicadores para medir el cumplimiento de metas y objetivos programáticos.",
+          "Seguimiento a cumplimiento de metas y explicación de variaciones.",
+          "Desempeño económico y social de los programas evaluados.",
+          "Informes de resultados de las evaluaciones realizadas a programas de gasto público.",
+          "Difusión de los resultados de las evaluaciones de los recursos federales ministrados a las entidades federativas (Formato CONAC3)",
+          "Definición y seguimiento de compromisos derivados de recomendaciones asociadas a hallazgos de las evaluaciones.",
+          "Calendario de evaluaciones a programas prioritarios.",
+          "Listado de programas a evaluar durante el ejercicio fiscal (Programa Anual de Evaluaciones).",
+          "Criterios y metodología para realizar las evaluaciones.",
+          "Lineamientos técnicos para la evaluación del desempeño programático."
+        ]
+      },
+      {
+        contenidoGeneral: "Recursos Transferidos",
+        contenidosEspecificos: [
+          "FONE. Detalle de los recursos transferidos para el pago de nóminas del sector educativo.",
+          "FASSA. Recursos transferidos para servicios de salud a las entidades federativas.",
+          "FASSA. Información de plazas.",
+          "FAIS Estatal. Recursos asignados para infraestructura social básica en entidades federativas.",
+          "FAIS Estatal. Información de seguimiento de obras.",
+          "FORTAMUN. Transferencias para el fortalecimiento de los municipios. Destinos conforme a la Ley de Coordinación Fiscal.",
+          "FAM (Asistencia Social e Infraestructura Operativa). Detalle de los recursos transferidos para infraestructura educativa.",
+          "FAETA. Recursos transferidos para educación tecnológica.",
+          "FAETA. Información de plazas del personal federalizado.",
+          "FASP. Recursos transferidos para seguridad pública en las entidades federativas. Montos recibidos, ejercicio, destino y resultados obtenidos.",
+          "FAFEF. Fondos para el fortalecimiento financiero de las entidades federativas. Informes sobre el ejercicio y destino de los recursos.",
+          "Informes sobre los recursos federales transferidos a través del Ramo General 33 (Aportaciones Federales para Entidades Federativas y Municipios).",
+          "Información sobre los recursos federales transferidos a través del Ramo General 28 (Participaciones a Entidades Federativas y Municipios). Calendario de entrega, porcentaje, fórmulas y variables utilizadas, así como los montos estimados.",
+          "Información sobre los recursos federales transferidos a través de Subsidios y Convenios.",
+          "Informe del uso de recursos transferidos y los resultados obtenidos por las entidades.",
+          "Calendario de entrega de recursos por fondo.",
+          "Monto total de los recursos de participaciones federales entregados."
+        ]
+      },
+      {
+        contenidoGeneral: "Transferencias a Municipios",
+        contenidosEspecificos: [
+          "Recursos federales transferidos a los municipios por concepto de participaciones y aportaciones.",
+          "Recursos estatales transferidos a los municipios."
+        ]
+      },
+      {
+        contenidoGeneral: "Servicios Personales",
+        contenidosEspecificos: [
+          "Remuneraciones del personal. Detalle de los salarios base, prestaciones, gratificaciones y bonos del personal.",
+          "Información desglosada por niveles de puesto y área administrativa.",
+          "Gastos de representación y viáticos.",
+          "Plantilla de plazas ocupadas y vacantes. Número total de plazas ocupadas y vacantes por unidad administrativa.",
+          "Estado Analítico del Presupuesto de Egresos Detallado en clasificación de servicios personales por categoría (Formato 6d LDF)"
+        ]
+      },
+      {
+        contenidoGeneral: "Obra Pública",
+        contenidosEspecificos: [
+          "Listado de obras públicas en ejecución, incluyendo montos y avance.",
+          "Programas de inversión pública a corto, mediano y largo plazo (Cartera de inversión).",
+          "Evaluación de los riesgos financieros asociados a los proyectos de Inversión Pública Productiva bajo esquema de Asociación Público-Privada.",
+          "Comparación entre esquema de Asociación Público-Privada y obra pública tradicional.",
+          "Evaluación del impacto económico de cada proyecto.",
+          "Análisis de los beneficios sociales de los proyectos de inversión.",
+          "Listado de proyectos de inversión priorizados por su impacto social y económico.",
+          "Criterios de priorización: beneficios sociales, costos, viabilidad.",
+          "Informe de avance físico y financiero de proyectos de inversión.",
+          "Informe de avance financiero: porcentaje del presupuesto ejecutado."
+        ]
+      },
+      {
+        contenidoGeneral: "Programas de Subsidios",
+        contenidosEspecificos: [
+          "Reglas de Operación o Lineamientos de los programas que otorgan subsidios.",
+          "Definición de los grupos poblacionales beneficiarios de los subsidios.",
+          "Finalidad de los subsidios otorgados, incluyendo el uso específico de los recursos.",
+          "Duración y fecha de inicio y término de los programas de subsidios."
+        ]
+      },
+      {
+        contenidoGeneral: "Procedimientos de Adquisiciones",
+        contenidosEspecificos: [
+          "Detalle de los procesos de licitación pública y adjudicación directa de bienes y servicios.",
+          "Programas Anuales de Adquisiciones, Arrendamientos y Servicios.",
+          "Reglas y mecanismos utilizados en los procesos de adquisición.",
+          "Información sobre los contratos celebrados, incluyendo términos, montos y proveedores."
+        ]
+      },
+      {
+        contenidoGeneral: "Comunicación Social y Publicidad",
+        contenidosEspecificos: [
+          "Gastos relativos a comunicación social y publicidad oficial desglosada por tipo de medio, proveedores, número de contrato y concepto o campaña."
+        ]
+      }
+    ]
+  },
+  {
+    categoria: "INFORMACIÓN CONTABLE",
+    contenidos: [
+      {
+        contenidoGeneral: "Estado de Actividades",
+        contenidosEspecificos: [
+          "Ingresos por impuestos, derechos, productos y aprovechamientos.",
+          "Ingresos por participaciones, aportaciones, transferencias, subsidios y convenios.",
+          "Gastos de funcionamiento, servicios personales, materiales y suministros.",
+          "Gastos en transferencias, subsidios y ayudas.",
+          "Resultados financieros del periodo."
+        ]
+      },
+      {
+        contenidoGeneral: "Estado de Situación Financiera",
+        contenidosEspecificos: [
+          "Estado de Situación Financiera Detall

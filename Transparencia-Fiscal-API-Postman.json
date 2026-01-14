@@ -1,0 +1,152 @@
+{
+  "info": {
+    "name": "Transparencia Fiscal API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colección de Postman para la API de Transparencia Fiscal del Estado de Morelos",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "🔐 Autenticación",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@morelos.gob.mx\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "auth", "login"]
+            },
+            "description": "Autenticación de usuario para obtener token JWT"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👥 Gestión de Usuarios",
+      "item": [
+        {
+          "name": "Obtener todos los usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users"]
+            },
+            "description": "Obtener lista de usuarios (requiere rol ADMIN)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 Catálogos",
+      "item": [
+        {
+          "name": "Obtener todos los catálogos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/catalogos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "catalogos"]
+            },
+            "description": "Obtener lista de catálogos"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📄 Documentos",
+      "item": [
+        {
+          "name": "Obtener todos los documentos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/documentos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "documentos"]
+            },
+            "description": "Obtener lista de documentos"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🌐 Público - Sin Autenticación",
+      "item": [
+        {
+          "name": "Búsqueda de documentos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"palabras_clave\": \"presupuesto 2025\",\n  \"catalogo_id\": null,\n  \"ejercicio_fiscal\": 2025,\n  \"tipo_documento\": \"pdf\",\n  \"pagina\": 1,\n  \"limite\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/public/busqueda-documentos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "public", "busqueda-documentos"]
+            },
+            "description": "Búsqueda de documentos públicos"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001",
+      "type": "string",
+      "description": "URL base de la API"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string",
+      "description": "Token JWT obtenido del login"
+    }
+  ]
+}

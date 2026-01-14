@@ -1,0 +1,319 @@
+{
+  "name": "AgendarCal_YT",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4720f60a-2561-46a3-ae80-fc32b550dd34",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6cdae935-f3c9-48e0-9d1e-fe9a3414827d",
+              "name": "Nombre",
+              "value": "={{ $('Code').item.json.nombre }}",
+              "type": "string"
+            },
+            {
+              "id": "e9140ab6-ca5a-49a0-9d2d-d67a1bb83495",
+              "name": "Correo",
+              "value": "={{ $('Code1').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "93bf31eb-874d-4621-8dbd-571a8be1e790",
+              "name": "TimeZone",
+              "value": "America/Cancun",
+              "type": "string"
+            },
+            {
+              "id": "fcbc7b95-36a0-47e0-ac2c-01f5585ff44b",
+              "name": "Dia",
+              "value": "={{ $('Code3').item.json.dia }}",
+              "type": "string"
+            },
+            {
+              "id": "7100ae58-a9b1-4d45-9459-c3c77ca254e8",
+              "name": "Hora",
+              "value": "={{ $json.hora }}",
+              "type": "string"
+            },
+            {
+              "id": "3398f805-9950-4b27-8159-5682498e91fb",
+              "name": "EventTypeId",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "2f84b221-e0fe-414e-9b1b-f2769e9bbea3",
+              "name": "Telefono",
+              "value": "={{ $('Code2').item.json.numero }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1320,
+        0
+      ],
+      "id": "a86d2847-f27d-4415-ac32-aa25a69dfa40",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cal.com/v2/bookings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer COLOCA_TU_API_KEY"
+            },
+            {
+              "name": "cal-api-version",
+              "value": "2024-08-13"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"start\": \"{{ $json.message.content }}\",\n  \"eventTypeId\": {{ $('Edit Fields1').item.json.EventTypeId }},\n  \"attendee\": {\n    \"name\": \"{{ $('Edit Fields1').item.json.Nombre }}\",\n    \"email\": \"{{ $('Edit Fields1').item.json.Correo }}\",\n    \"timeZone\": \"{{ $('Edit Fields1').item.json.TimeZone }}\"\n  },\n  \"bookingFieldsResponses\": {\n    \"Telefono\": \"{{ $('Edit Fields1').item.json.Telefono }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        0
+      ],
+      "id": "c50a8871-e84b-4c96-91e7-8af7811fb7fb",
+      "name": "Booking"
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $('When Executed by Another Workflow').first().json.query;\n\n// Separar el elemento antes del guion \"-\"\nconst nombre = query.split(',')[0];\n\nreturn [{ json: { nombre } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "ddb525d6-ddf3-4abf-8f67-7e62d4666bd3",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $('When Executed by Another Workflow').first().json.query;\n// Separar el elemento antes del guion \"-\" y eliminar espacios\nconst emailConEspacios = query.split(',')[1];\n// Eliminar espacios en blanco al inicio y al final\nconst email = emailConEspacios ? emailConEspacios.trim() : '';\nreturn [{ json: { email } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        0
+      ],
+      "id": "200d0ee6-d0d8-414f-907c-0614684f353c",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $('When Executed by Another Workflow').first().json.query;\n// Separar el elemento antes del guion \"-\" y eliminar espacios\nconst numeroConEspacios = query.split(',')[2];\n// Eliminar espacios en blanco al inicio y al final\nconst numero = numeroConEspacios ? numeroConEspacios.trim() : '';\nreturn [{ json: { numero } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "ca13b5da-5445-4781-bb8a-d8aaf56c0f4d",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $('When Executed by Another Workflow').first().json.query;\n// Separar el elemento antes del guion \"-\" y eliminar espacios\nconst diaConEspacios = query.split(',')[3];\n// Eliminar espacios en blanco al inicio y al final\nconst dia = diaConEspacios ? diaConEspacios.trim() : '';\nreturn [{ json: { dia } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "e717cc62-77be-420c-93b6-67560822a109",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $('When Executed by Another Workflow').first().json.query;\n// Separar el elemento antes del guion \"-\" y eliminar espacios\nconst horaConEspacios = query.split(',')[4];\n// Eliminar espacios en blanco al inicio y al final\nconst hora = horaConEspacios ? horaConEspacios.trim() : '';\nreturn [{ json: { hora } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "72d2a543-3c75-4b77-abd3-1e6642dbc776",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Dia: {{ $json.Dia }}\nHora: {{ $json.Hora }}\nFecha actual: {{ $now }}"
+            },
+            {
+              "content": "=## ROL\n- Actúa como un asistente experto en transformación de fechas, con el objetivo de convertir un día y una hora en un string de fecha en formato ISO 8601 como este:\n2025-09-21T15:00:00.000Z\n\n- Eres preciso, rápido y confiable. Tu única tarea es entregar el formato correcto sin errores.\nSiempre responde solo con la fecha final en formato ISO, nada más.\n\n## TAREAS\n1. Brindar el ISO UTC basandose en la zona horaria de America/Cancun y los dos datos: Dia y hora.\n\n## ESPECIFICACIONES\n- Recibes como input dos datos: el día especifico y la hora especifica.\n- La zona horaria es America/Cancun\n- Une ambos datos \"Dia\" y \"Hora\" en un string ISO UTC con el siguiente formato:\nYYYY-MM-DDTHH:MM:00.000Z\n- No agregues espacios, comentarios ni otro texto. Solo responde con el string resultante.\n\n## EJEMPLOS\n- Ejemplo 1\nInput:\nDía: 2025-08-25\nHora: 15:00\nOutput:\n2025-08-25T20:00:00.000Z\n\n- Ejemplo 2\nInput:\nDía: 3 de mayo del 2025\nHora: 9:30 AM\nOutput:\n2025-05-03T14:30:00.000Z\n\n- Ejemplo 3\nInput:\nDía: 10 de junio del 2025\nHora: 6:45 pm\nOutput:\n2025-06-10T23:45:00.000Z",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1540,
+        0
+      ],
+      "id": "4afe379a-b10c-408a-9921-48e012da80ea",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "pQHaYsnkKUwQ0USJ",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "Mario alberto, mar@gmail.com, +5254545220, 21 de abril del 2025, 15:00"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Booking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dbe5d999-b835-4eeb-85da-10183430a509",
+  "meta": {
+    "instanceId": "bc26238c5fd39989c70f3eff93c03215fc8f1867366707f70cc963fa92067faf"
+  },
+  "id": "GE3Bj6nYMHeqhg1N",
+  "tags": []
+}
