@@ -20,6 +20,11 @@ import { FileDownloadModule } from './common/services/file-download.module';
       isGlobal: true,
       load: [databaseConfig, jwtConfig, corsConfig, storageConfig],
       validate,
+      envFilePath: process.env.NODE_ENV === 'production' 
+        ? '.env.production' 
+        : process.env.NODE_ENV === 'test'
+          ? '.env.test'
+          : '.env.development',
     }),
     PrismaModule,
     MailModule,

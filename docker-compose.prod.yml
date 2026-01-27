@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  transparencia-fiscal-api:
+    image: transparencia-fiscal-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transparencia-fiscal-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - LOG_LEVEL=info
+      - UPLOAD_DIR=/app/uploads
+      # Variables de base de datos - PRODUCCIÓN
+      - DB_HOST=${DB_HOST:-192.168.105.14}
+      - DB_PORT=${DB_PORT:-1433}
+      - DB_NAME=${DB_NAME:-DB_Transparencia_Fiscal}
+      - DB_USER=${DB_USER:-usuing}
+      - DB_PASSWORD=${DB_PASSWORD:-PdJ*2025*7894}
+      - DB_ENCRYPT=${DB_ENCRYPT:-false}
+      - DB_TRUST_SERVER_CERTIFICATE=${DB_TRUST_SERVER_CERTIFICATE:-true}
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET:-e7c4a9b2f6d1a3c8e0f9b7d5c2a4e6f1a9b8c7d6e5f4a3b2c1d0e9f8a7}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-30m}
+      # CORS Configuration
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://app.administracionyfinanzas.morelos.gob.mx}
+      # Email Configuration
+      - MAIL_HOST=${MAIL_HOST:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_SECURE=${MAIL_SECURE:-false}
+      - MAIL_USER=${MAIL_USER:-soporte.csi@morelos.gob.mx}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-jnwsghxuoonblgxs}
+      - MAIL_FROM=${MAIL_FROM:-soporte.csi@morelos.gob.mx}
+      - MAIL_REPLY_TO=${MAIL_REPLY_TO:-no-reply@morelos.gob.mx}
+    volumes:
+      - uploads_volume:/app/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', {timeout: 5000}, (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - transparencia-network
+
+volumes:
+  uploads_volume:
+    name: transparencia-fiscal-uploads
+
+networks:
+  transparencia-network:
+    name: transparencia-fiscal-network
+    driver: bridge

@@ -6,10 +6,10 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 # ETAPA 2: Builder
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Labels gobierno
 LABEL org.government.app="backend-transparencia-fiscal" \
@@ -26,17 +26,23 @@ WORKDIR /app
 
 # Copiar dependencias instaladas
 COPY --from=deps /app/node_modules ./node_modules
-COPY --chown=appuser:appgroup . .
+COPY . .
 
 # Variables de build
 ENV NODE_ENV=production
-USER appuser
+
+# Generar cliente de Prisma
+RUN npx prisma generate
 
 # Build de Nest.js
 RUN npm run build
 
+# Cambiar permisos para el usuario no-root
+RUN chown -R appuser:appgroup /app
+USER appuser
+
 # ETAPA 3: Runner
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Argumentos de build para trazabilidad
 ARG BUILD_DATE
@@ -45,12 +51,12 @@ ARG VERSION="1.0.0"
 
 # Health check con credenciales de base de datos
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:4000/health', {timeout: 5000}, (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
+  CMD node -e "require('http').get('http://localhost:3001/health', {timeout: 5000}, (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
 
 # Instalar solo lo necesario para runtime
 RUN apk add --no-cache tzdata && \
-    cp /usr/share/zoneinfo/America/Santiago /etc/localtime && \
-    echo "America/Santiago" > /etc/timezone && \
+    cp /usr/share/zoneinfo/America/Mexico_City /etc/localtime && \
+    echo "America/Mexico_City" > /etc/timezone && \
     apk del tzdata
 
 # Crear usuario no-root (mismo UID que builder)
@@ -65,20 +71,24 @@ WORKDIR /app
 COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
 COPY --from=builder --chown=appuser:appgroup /app/node_modules ./node_modules
 COPY --from=builder --chown=appuser:appgroup /app/package.json ./package.json
-
-# Copiar script de entrypoint
-#COPY --chown=appuser:appgroup docker-entrypoint.sh ./
-#RUN chmod +x docker-entrypoint.sh
+COPY --from=builder --chown=appuser:appgroup /app/prisma ./prisma
 
 # Variables de entorno seguras (defaults)
 ENV NODE_ENV=production \
-    PORT=4000 \
+    PORT=3001 \
     HOST=0.0.0.0 \
     LOG_LEVEL=info \
-    UPLOAD_DIR=/app/uploads
+    UPLOAD_DIR=/app/uploads \
+    # Variables de base de datos por defecto (para desarrollo local)
+    DB_HOST=localhost \
+    DB_PORT=1433 \
+    DB_NAME=DB_Transparencia_Fiscal \
+    DB_USER=sa \
+    DB_ENCRYPT=false \
+    DB_TRUST_SERVER_CERTIFICATE=true
 
 # Puerto de la aplicación
-EXPOSE 4000
+EXPOSE 3001
 
 # Volumen para documentos (DECLARATIVO - no crea)
 VOLUME ["/app/uploads"]
@@ -87,7 +97,9 @@ VOLUME ["/app/uploads"]
 USER appuser
 
 # Entrypoint para inicializaciones
-ENTRYPOINT ["./docker-entrypoint.sh"]
+#ENTRYPOINT ["./docker-entrypoint.sh"]
 
-# Comando principal
-CMD ["node", "dist/main"]
+# Comando principal con migraciones de Prisma
+#CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+CMD ["node", "dist/src/main"]
+
