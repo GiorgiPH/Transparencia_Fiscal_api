@@ -28,7 +28,7 @@ export class UsersService {
       email: createUserDto.email,
       password: hashedPassword,
       name: createUserDto.name,
-      institucion_id: createUserDto.institucion_id,
+      dependenciaId: createUserDto.dependenciaId,
       area_departamento: createUserDto.area_departamento,
       telefono: createUserDto.telefono,
       requiere_2fa: createUserDto.requiere_2fa ?? false,
@@ -112,7 +112,7 @@ export class UsersService {
 
     if (updateUserDto.name !== undefined) updateData.name = updateUserDto.name;
     if (updateUserDto.email !== undefined) updateData.email = updateUserDto.email;
-    if (updateUserDto.institucion_id !== undefined) updateData.institucion_id = updateUserDto.institucion_id;
+    if (updateUserDto.dependenciaId !== undefined) updateData.dependenciaId = updateUserDto.dependenciaId;
     if (updateUserDto.area_departamento !== undefined) updateData.area_departamento = updateUserDto.area_departamento;
     if (updateUserDto.telefono !== undefined) updateData.telefono = updateUserDto.telefono;
     if (updateUserDto.requiere_2fa !== undefined) updateData.requiere_2fa = updateUserDto.requiere_2fa;

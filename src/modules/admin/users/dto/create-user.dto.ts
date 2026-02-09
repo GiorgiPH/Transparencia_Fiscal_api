@@ -31,13 +31,13 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
-    description: 'ID de la institución del usuario',
-    example: 'inst-001',
+    description: 'ID de la dependencia del usuario',
+    example: 1,
     required: false,
   })
   @IsOptional()
-  @IsString({ message: 'El ID de institución debe ser una cadena de texto' })
-  institucion_id?: string;
+  @IsNumber({}, { message: 'El ID de dependencia debe ser un número' })
+  dependenciaId?: number;
 
   @ApiProperty({
     description: 'Área o departamento del usuario',

@@ -69,7 +69,7 @@ export class UsersController {
       name: createUserFormDto.name,
       email: createUserFormDto.email,
       password: createUserFormDto.password,
-      institucion_id: createUserFormDto.institucion_id,
+      dependenciaId: createUserFormDto.dependenciaId,
       telefono: createUserFormDto.telefono,
       roleIds: createUserFormDto.roleIds,
       requiere_2fa: createUserFormDto.requiere_2fa,
@@ -183,7 +183,7 @@ export class UsersController {
     const updateUserDto: UpdateUserDto = {
       name: updateUserFormDto.name,
       email: updateUserFormDto.email,
-      institucion_id: updateUserFormDto.institucion_id,
+      dependenciaId: updateUserFormDto.dependenciaId,
       area_departamento: updateUserFormDto.area_departamento,
       telefono: updateUserFormDto.telefono,
       roleIds: updateUserFormDto.roleIds,

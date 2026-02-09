@@ -56,7 +56,7 @@ export class CatalogosService {
       if (!documentosMap.get(doc.catalogo_id)!.has(doc.tipo_documento_id)) {
         documentosMap.get(doc.catalogo_id)!.set(doc.tipo_documento_id, {
           id: doc.id.toString(), // Convertir a string para coincidir con el DTO
-          nombre: doc.nombre,
+          nombre: doc.nombre!,
         });
       }
     });

@@ -7,235 +7,240 @@ datasource db {
 }
 
 model User {
-  id                         Int      @id @default(autoincrement()) @map("id")
-  email                      String   @unique @map("login")
-  password                   String   @map("password_hash")
-  name                       String?
-  foto_perfil                String?  @map("foto_perfil")
-  area_departamento          String?  @map("area_departamento")
-  telefono                   String?  @map("telefono")
-  requiere_2fa               Boolean  @default(false) @map("requiere_2fa")
-  activo                     Boolean  @default(true) @map("activo")
-  ultimo_acceso              DateTime? @map("ultimo_acceso")
-  fecha_creacion             DateTime @default(now()) @map("fecha_creacion")
-  fecha_modificacion         DateTime @updatedAt @map("fecha_modificacion")
-  fecha_ultimo_cambio_pass   DateTime? @map("fecha_ultimo_cambio_pass")
-  usuario_creacion_id        Int?      @map("usuario_creacion_id")
-  usuario_modif_id           Int?     @map("usuario_modif_id")
-  institucion_id             String?  @map("institucion_id")
-
-  // Relaciones
-  roles      UsuarioRol[]
-  refreshTokens RefreshToken[]
-  verificationCodes VerificationCode[]
+  id                       Int                @id @default(autoincrement()) @map("id")
+  email                    String             @unique @map("login")
+  password                 String             @map("password_hash")
+  name                     String?
+  foto_perfil              String?            @map("foto_perfil")
+  area_departamento        String?            @map("area_departamento")
+  telefono                 String?            @map("telefono")
+  requiere_2fa             Boolean            @default(false) @map("requiere_2fa")
+  activo                   Boolean            @default(true) @map("activo")
+  ultimo_acceso            DateTime?          @map("ultimo_acceso")
+  fecha_creacion           DateTime           @default(now()) @map("fecha_creacion")
+  fecha_modificacion       DateTime           @updatedAt @map("fecha_modificacion")
+  fecha_ultimo_cambio_pass DateTime?          @map("fecha_ultimo_cambio_pass")
+  usuario_creacion_id      Int?               @map("usuario_creacion_id")
+  usuario_modif_id         Int?               @map("usuario_modif_id")
+  dependenciaId            Int?               @map("institucion_id")
+  dependencia              Dependencia?       @relation(fields: [dependenciaId], references: [id], onUpdate: NoAction)
+  refreshTokens            RefreshToken[]
+  roles                    UsuarioRol[]
+  verificationCodes        VerificationCode[]
 
   @@map("users")
 }
 
 model Rol {
-  id           Int      @id @default(autoincrement()) @map("rol_id")
-  nombre       String   @unique
-  descripcion  String?
-  activo       Boolean  @default(true)
-  fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
-  fecha_modificacion  DateTime @updatedAt @map("fecha_modificacion")
-
-  // Relaciones
-  usuarios     UsuarioRol[]
-  permisos     RolPermiso[]
+  id                 Int          @id @default(autoincrement()) @map("rol_id")
+  nombre             String       @unique
+  descripcion        String?
+  activo             Boolean      @default(true)
+  fecha_creacion     DateTime     @default(now()) @map("fecha_creacion")
+  fecha_modificacion DateTime     @updatedAt @map("fecha_modificacion")
+  permisos           RolPermiso[]
+  usuarios           UsuarioRol[]
 
   @@map("roles")
 }
 
 model Permiso {
-  id          Int      @id @default(autoincrement()) @map("permiso_id")
-  codigo      String   @unique
-  descripcion String
-  fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
-  fecha_modificacion  DateTime @updatedAt @map("fecha_modificacion")
-
-  // Relaciones
-  roles       RolPermiso[]
+  id                 Int          @id @default(autoincrement()) @map("permiso_id")
+  codigo             String       @unique
+  descripcion        String
+  fecha_creacion     DateTime     @default(now()) @map("fecha_creacion")
+  fecha_modificacion DateTime     @updatedAt @map("fecha_modificacion")
+  roles              RolPermiso[]
 
   @@map("permisos")
 }
 
 model UsuarioRol {
-  id                Int      @id @default(autoincrement()) @map("id")
-  usuario_id        Int      @map("usuario_id")
-  rol_id            Int      @map("rol_id")
-  fecha_asignacion  DateTime @default(now()) @map("fecha_asignacion")
-
-  // Relaciones
-  usuario User @relation(fields: [usuario_id], references: [id])
-  rol     Rol  @relation(fields: [rol_id], references: [id])
+  id               Int      @id @default(autoincrement()) @map("id")
+  usuario_id       Int      @map("usuario_id")
+  rol_id           Int      @map("rol_id")
+  fecha_asignacion DateTime @default(now()) @map("fecha_asignacion")
+  rol              Rol      @relation(fields: [rol_id], references: [id])
+  usuario          User     @relation(fields: [usuario_id], references: [id])
 
   @@unique([usuario_id, rol_id])
   @@map("usuario_roles")
 }
 
 model RolPermiso {
-  id                Int      @id @default(autoincrement()) @map("id")
-  rol_id            Int      @map("rol_id")
-  permiso_id        Int      @map("permiso_id")
-  fecha_asignacion  DateTime @default(now()) @map("fecha_asignacion")
-
-  // Relaciones
-  rol     Rol     @relation(fields: [rol_id], references: [id])
-  permiso Permiso @relation(fields: [permiso_id], references: [id])
+  id               Int      @id @default(autoincrement()) @map("id")
+  rol_id           Int      @map("rol_id")
+  permiso_id       Int      @map("permiso_id")
+  fecha_asignacion DateTime @default(now()) @map("fecha_asignacion")
+  permiso          Permiso  @relation(fields: [permiso_id], references: [id])
+  rol              Rol      @relation(fields: [rol_id], references: [id])
 
   @@unique([rol_id, permiso_id])
   @@map("rol_permisos")
 }
 
 model RefreshToken {
-  id              String   @id @default(uuid()) @map("refresh_token_id")
-  usuario_id      Int      @map("usuario_id")
-  token_hash      String
-  ip_origen       String?  @map("ip_origen")
-  user_agent      String?  @map("user_agent")
+  id               String   @id @default(uuid()) @map("refresh_token_id")
+  usuario_id       Int      @map("usuario_id")
+  token_hash       String
+  ip_origen        String?  @map("ip_origen")
+  user_agent       String?  @map("user_agent")
   fecha_expiracion DateTime @map("fecha_expiracion")
-  activo          Boolean  @default(true)
-  fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
-
-  // Relaciones
-  usuario User @relation(fields: [usuario_id], references: [id])
+  activo           Boolean  @default(true)
+  fecha_creacion   DateTime @default(now()) @map("fecha_creacion")
+  usuario          User     @relation(fields: [usuario_id], references: [id])
 
   @@map("refresh_tokens")
 }
 
 model Catalogo {
-  id                  Int      @id @default(autoincrement()) @map("catalogo_id")
+  id                  Int         @id @default(autoincrement()) @map("catalogo_id")
   nombre              String
   descripcion         String?
-  descripcion_nivel         String?
-  icono         String?
-
-  parent_id           Int?     @map("parent_id")
-  nivel               Int      @default(0)
-  orden               Int      @default(0)
-  activo              Boolean  @default(true) @map("activo")
-  permite_documentos  Boolean  @default(true) @map("permite_documentos")
-  fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
-  fecha_modificacion  DateTime @updatedAt @map("fecha_modificacion")
-  usuario_creacion_id Int      @map("usuario_creacion_id")
-  usuario_modif_id    Int?     @map("usuario_modif_id")
-
-  // Relaciones
-  parent   Catalogo?  @relation("CatalogoParent", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  children Catalogo[] @relation("CatalogoParent")
-  documentos Documento[]
+  descripcion_nivel   String?
+  icono               String?
+  parent_id           Int?        @map("parent_id")
+  nivel               Int         @default(0)
+  orden               Int         @default(0)
+  activo              Boolean     @default(true) @map("activo")
+  permite_documentos  Boolean     @default(true) @map("permite_documentos")
+  fecha_creacion      DateTime    @default(now()) @map("fecha_creacion")
+  fecha_modificacion  DateTime    @updatedAt @map("fecha_modificacion")
+  usuario_creacion_id Int         @map("usuario_creacion_id")
+  usuario_modif_id    Int?        @map("usuario_modif_id")
+  parent              Catalogo?   @relation("CatalogoParent", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children            Catalogo[]  @relation("CatalogoParent")
+  documentos          Documento[]
 
   @@map("catalogos")
 }
 
 model TipoDocumento {
-  id                  Int      @id @default(autoincrement()) @map("tipo_documento_id")
-  nombre              String   @unique
+  id                  Int         @id @default(autoincrement()) @map("tipo_documento_id")
+  nombre              String      @unique
   descripcion         String?
-  extensiones         String   @map("extensiones") // "csv,json,xml,xlsx"
-  activo              Boolean  @default(true) @map("activo")
-  fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
-  fecha_modificacion  DateTime @updatedAt @map("fecha_modificacion")
-  usuario_creacion_id Int      @map("usuario_creacion_id")
-  usuario_modif_id    Int?     @map("usuario_modif_id")
-
-  // Relaciones
-  documentos Documento[]
+  extensiones         String      @map("extensiones")
+  activo              Boolean     @default(true) @map("activo")
+  fecha_creacion      DateTime    @default(now()) @map("fecha_creacion")
+  fecha_modificacion  DateTime    @updatedAt @map("fecha_modificacion")
+  usuario_creacion_id Int         @map("usuario_creacion_id")
+  usuario_modif_id    Int?        @map("usuario_modif_id")
+  documentos          Documento[]
 
   @@map("tipos_documento")
 }
 
 model Documento {
-  id                  Int      @id @default(autoincrement()) @map("documento_id")
-  catalogo_id         Int      @map("catalogo_id")
-  tipo_documento_id   Int      @map("tipo_documento_id")
-  nombre              String
+  id                  Int           @id @default(autoincrement()) @map("documento_id")
+  catalogo_id         Int           @map("catalogo_id")
+  tipo_documento_id   Int           @map("tipo_documento_id")
+  nombre              String?
   descripcion         String?
-  ejercicio_fiscal    Int      @map("ejercicio_fiscal")
-  ruta_archivo        String   @map("ruta_archivo")
-  extension           String   @map("extension")
-  peso_archivo        Decimal? @map("peso_archivo")
-  version             Int      @default(1) @map("version")
-  estatus             String   @default("borrador") @map("estatus")
-  fecha_publicacion   DateTime? @map("fecha_publicacion")
-  activo              Boolean  @default(true) @map("activo")
-  institucion_emisora String?  @map("institucion_emisora")
-  periodicidad        String?  @map("periodicidad")
-  fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
-  fecha_modificacion  DateTime @updatedAt @map("fecha_modificacion")
-  usuario_creacion_id Int      @map("usuario_creacion_id")
-  usuario_modif_id    Int?     @map("usuario_modif_id")
+  ejercicio_fiscal    Int           @map("ejercicio_fiscal")
+  ruta_archivo        String        @map("ruta_archivo")
+  extension           String        @map("extension")
+  peso_archivo        Decimal?      @map("peso_archivo")
+  version             Int           @default(1) @map("version")
+  estatus             String        @default("borrador") @map("estatus")
+  fecha_publicacion   DateTime?     @map("fecha_publicacion")
+  activo              Boolean       @default(true) @map("activo")
+  institucion_emisora String?       @map("institucion_emisora")
+  periodicidad        String?       @map("periodicidad")
+  fecha_creacion      DateTime      @default(now()) @map("fecha_creacion")
+  fecha_modificacion  DateTime      @updatedAt @map("fecha_modificacion")
+  usuario_creacion_id Int           @map("usuario_creacion_id")
+  usuario_modif_id    Int?          @map("usuario_modif_id")
+  catalogo            Catalogo      @relation(fields: [catalogo_id], references: [id], onUpdate: NoAction)
+  tipo_documento      TipoDocumento @relation(fields: [tipo_documento_id], references: [id], onUpdate: NoAction)
 
-  // Relaciones
-  catalogo      Catalogo      @relation(fields: [catalogo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tipo_documento TipoDocumento @relation(fields: [tipo_documento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@unique([catalogo_id, tipo_documento_id], name: "catalogo_tipo_documento_unique")
   @@map("documentos")
 }
 
 model VerificationCode {
-  id                  String   @id @default(uuid()) @map("verification_code_id")
-  usuario_id          Int      @map("usuario_id")
-  codigo              String   @map("codigo")
-  tipo                String   @map("tipo") // "password_reset", "email_verification", "2fa"
-  usado               Boolean  @default(false) @map("usado")
-  fecha_expiracion    DateTime @map("fecha_expiracion")
-  fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
-  fecha_uso           DateTime? @map("fecha_uso")
-
-  // Relaciones
-  usuario User @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  id               String    @id @default(uuid()) @map("verification_code_id")
+  usuario_id       Int       @map("usuario_id")
+  codigo           String    @map("codigo")
+  tipo             String    @map("tipo")
+  usado            Boolean   @default(false) @map("usado")
+  fecha_expiracion DateTime  @map("fecha_expiracion")
+  fecha_creacion   DateTime  @default(now()) @map("fecha_creacion")
+  fecha_uso        DateTime? @map("fecha_uso")
+  usuario          User      @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
 
   @@map("verification_codes")
 }
 
-
 model MensajeParticipacionCiudadana {
-  id                String   @id @default(uuid()) @map("id_mensaje")
-  folio             String   @unique @map("folio")
-  nombre_completo   String   @map("nombre_completo")
-  correo_electronico String   @map("correo_electronico")
-  asunto            String   @map("asunto")
-  mensaje           String   @map("mensaje")
-  estatus           String   @default("pendiente") @map("estatus") // pendiente, en_proceso, respondido, cerrado
-  canal             String   @default("web") @map("canal") // web, email, telefono, presencial
-  area_destino      String?  @map("area_destino")
-  respuesta         String?  @map("respuesta")
-  fecha_respuesta   DateTime? @map("fecha_respuesta")
-  fecha_creacion    DateTime @default(now()) @map("fecha_creacion")
-  fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
-  direccion_ip      String?  @map("direccion_ip")
-  agente_usuario    String?  @map("agente_usuario")
+  id                  String    @id @default(uuid()) @map("id_mensaje")
+  folio               String    @unique @map("folio")
+  nombre_completo     String    @map("nombre_completo")
+  correo_electronico  String    @map("correo_electronico")
+  asunto              String    @map("asunto")
+  mensaje             String    @map("mensaje")
+  estatus             String    @default("pendiente") @map("estatus")
+  canal               String    @default("web") @map("canal")
+  area_destino        String?   @map("area_destino")
+  respuesta           String?   @map("respuesta")
+  fecha_respuesta     DateTime? @map("fecha_respuesta")
+  fecha_creacion      DateTime  @default(now()) @map("fecha_creacion")
+  fecha_actualizacion DateTime  @updatedAt @map("fecha_actualizacion")
+  direccion_ip        String?   @map("direccion_ip")
+  agente_usuario      String?   @map("agente_usuario")
 
   @@map("mensajes_participacion_ciudadana")
 }
 
 model Noticia {
-  id                Int      @id @default(autoincrement()) @map("id")
-  titulo            String   @map("titulo")
-  descripcion_corta String   @map("descripcion_corta")
-  contenido         String   @map("contenido")
-  imagen_url        String?  @map("imagen_url")
-  fecha_publicacion DateTime @map("fecha_publicacion")
-  activo            Boolean  @default(true) @map("activo")
-  fecha_creacion    DateTime @default(now()) @map("fecha_creacion")
+  id                  Int      @id @default(autoincrement()) @map("id")
+  titulo              String   @map("titulo")
+  descripcion_corta   String   @map("descripcion_corta")
+  contenido           String   @map("contenido")
+  imagen_url          String?  @map("imagen_url")
+  fecha_publicacion   DateTime @map("fecha_publicacion")
+  activo              Boolean  @default(true) @map("activo")
+  fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
   fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
 
   @@map("noticias")
 }
 
 model RedSocial {
-  id                Int      @id @default(autoincrement()) @map("id")
-  nombre            String   @map("nombre") // Facebook, Instagram, X, YouTube, LinkedIn
-  descripcion       String   @map("descripcion") // Facebook, Instagram, X, YouTube, LinkedIn
-  url               String   @map("url")
-  icono             String   @map("icono") // Nombre del icono o URL del icono
-  activo            Boolean  @default(true) @map("activo")
-  orden             Int      @default(0) @map("orden") // Para ordenar en la interfaz
-  fecha_creacion    DateTime @default(now()) @map("fecha_creacion")
+  id                  Int      @id @default(autoincrement()) @map("id")
+  nombre              String   @map("nombre")
+  descripcion         String   @map("descripcion")
+  url                 String   @map("url")
+  icono               String   @map("icono")
+  activo              Boolean  @default(true) @map("activo")
+  orden               Int      @default(0) @map("orden")
+  fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
   fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
 
   @@map("redes_sociales")
+}
+
+model TipoDependencia {
+  id           Int           @id(map: "PK_TiposDependencia") @default(autoincrement()) @map("IdTipo")
+  nombre       String        @unique(map: "UQ_TiposDependencia_Nombre") @map("Nombre") @db.NVarChar(100)
+  dependencias Dependencia[]
+
+  @@map("TiposDependencia")
+}
+
+model Dependencia {
+  id        Int             @id(map: "PK_Dependencias") @default(autoincrement()) @map("IdDependencia")
+  nombre    String          @map("Nombre") @db.NVarChar(250)
+  idTipo    Int             @map("IdTipo")
+  idPadre   Int?            @map("IdPadre")
+  nivel     Int             @map("Nivel")
+  orden     Int             @default(0, map: "DF__Dependenc__Orden__04E4BC85") @map("Orden")
+  activo    Boolean         @default(true, map: "DF__Dependenc__Activ__05D8E0BE") @map("Activo")
+  fechaAlta DateTime        @default(now(), map: "DF__Dependenc__Fecha__06CD04F7") @map("FechaAlta") @db.DateTime
+  padre     Dependencia?    @relation("DependenciaParent", fields: [idPadre], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Dependencias_Padre")
+  hijos     Dependencia[]   @relation("DependenciaParent")
+  tipo      TipoDependencia @relation(fields: [idTipo], references: [id], onUpdate: NoAction, map: "FK_Dependencias_Tipo")
+  usuarios  User[]
+
+  @@index([idPadre], map: "IX_Dependencias_IdPadre")
+  @@index([idTipo], map: "IX_Dependencias_IdTipo")
+  @@map("Dependencias")
 }
