@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   UseInterceptors,
   ClassSerializerInterceptor,
   HttpStatus,
@@ -11,10 +12,13 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { CatalogosService } from './catalogos.service';
 import { CatalogoHijosResponseDto } from './dto/catalogo-hijos-response.dto';
 import { TipoDocumentoResponseDto } from './dto/tipo-documento-response.dto';
+import { BuscarCatalogosDto } from './dto/buscar-catalogos.dto';
+import { BuscarCatalogosResponseDto } from './dto/buscar-catalogos-response.dto';
 import { Public } from '../../../common/decorators/public.decorator';
 import { TransformInterceptor } from '../../../common/interceptors/response.interceptor';
 
@@ -79,7 +83,7 @@ export class CatalogosController {
     return this.catalogosService.obtenerCatalogoRaiz();
   }
 
-  @Get(':id')
+/*   @Get(':id')
   @ApiOperation({
     summary: 'Obtener información de un catálogo',
     description: 'Obtiene la información básica de un catálogo específico, incluyendo información de disponibilidad de tipos de documento si el catálogo permite documentos.',
@@ -102,6 +106,24 @@ export class CatalogosController {
     const catalogoId = parseInt(id, 10);
     return this.catalogosService.obtenerCatalogoPorId(catalogoId);
   }
-
-  
+ */
+  @Get('buscar')
+  @ApiOperation({
+    summary: 'Buscar catálogos por texto',
+    description: 'Busca catálogos por nombre o descripción y devuelve los resultados con su path completo desde la raíz.',
+  })
+  @ApiQuery({
+    name: 'q',
+    description: 'Texto de búsqueda (mínimo 2 caracteres)',
+    required: false,
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de catálogos coincidentes con su path completo',
+    type: [BuscarCatalogosResponseDto],
+  })
+  async buscarCatalogos(@Query() buscarDto: BuscarCatalogosDto): Promise<BuscarCatalogosResponseDto[]> {
+    return this.catalogosService.buscarCatalogos(buscarDto.q || '');
+  }
 }
