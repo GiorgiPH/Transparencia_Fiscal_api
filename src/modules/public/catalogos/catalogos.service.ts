@@ -3,6 +3,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { CatalogoHijosResponseDto } from './dto/catalogo-hijos-response.dto';
 import { DisponibilidadTipoDocumentoDto } from './dto/disponibilidad-tipo-documento.dto';
 import { TipoDocumentoResponseDto } from './dto/tipo-documento-response.dto';
+import { BuscarCatalogosResponseDto, CatalogoPathItemDto } from './dto/buscar-catalogos-response.dto';
 
 @Injectable()
 export class CatalogosService {
@@ -156,6 +157,11 @@ export class CatalogosService {
   }
 
   async obtenerCatalogoPorId(catalogoId: number): Promise<CatalogoHijosResponseDto> {
+    // Validar que catalogoId sea un número válido
+    if (!catalogoId || isNaN(catalogoId) || catalogoId <= 0) {
+      throw new NotFoundException(`ID de catálogo inválido: ${catalogoId}`);
+    }
+
     const catalogo = await this.prisma.catalogo.findFirst({
       where: {
         id: catalogoId,
@@ -226,5 +232,113 @@ export class CatalogosService {
       fechaCreacion: tipoDocumento.fecha_creacion,
       fechaModificacion: tipoDocumento.fecha_modificacion,
     };
+  }
+
+  /**
+   * Busca catálogos por texto y devuelve los resultados con su path completo
+   */
+  async buscarCatalogos(texto: string): Promise<BuscarCatalogosResponseDto[]> {
+    if (!texto || texto.trim().length < 2) {
+      return [];
+    }
+
+    const searchText = texto.trim().toLowerCase();
+
+    // Buscar catálogos que coincidan con el texto de búsqueda
+    const catalogosCoincidentes = await this.prisma.catalogo.findMany({
+      where: {
+        activo: true,
+        OR: [
+          { nombre: { contains: searchText } },
+          { descripcion: { contains: searchText } },
+        ],
+      },
+      orderBy: [
+        { nivel: 'asc' },
+        { orden: 'asc' },
+        { nombre: 'asc' },
+      ],
+    });
+
+    if (catalogosCoincidentes.length === 0) {
+      return [];
+    }
+
+    // Obtener disponibilidad para catálogos que permiten documentos
+    const disponibilidadPorCatalogo = await this.obtenerDisponibilidadParaCatalogos(catalogosCoincidentes);
+
+    // Para cada catálogo coincidente, obtener su path completo
+    const resultados: BuscarCatalogosResponseDto[] = [];
+
+    for (const catalogo of catalogosCoincidentes) {
+      // Obtener el path completo (ancestros) del catálogo
+      const path = await this.obtenerPathCompleto(catalogo.id);
+      
+      // Mapear el catálogo al DTO base
+      const catalogoDto = this.mapearCatalogoADto(catalogo, disponibilidadPorCatalogo);
+      
+      // Crear el DTO de respuesta con el path
+      const resultado: BuscarCatalogosResponseDto = {
+        ...catalogoDto,
+        path: path.map(item => ({
+          id: item.id,
+          nombre: item.nombre,
+          nivel: item.nivel,
+        })),
+      };
+
+      resultados.push(resultado);
+    }
+
+    return resultados;
+  }
+
+  /**
+   * Obtiene el path completo (todos los ancestros) de un catálogo
+   */
+  private async obtenerPathCompleto(catalogoId: number): Promise<CatalogoPathItemDto[]> {
+    const path: CatalogoPathItemDto[] = [];
+    let currentId: number | null = catalogoId;
+
+    // Usamos un límite para evitar bucles infinitos en caso de datos corruptos
+    const maxDepth = 20;
+    let depth = 0;
+
+    while (currentId !== null && depth < maxDepth) {
+      // Validar que currentId sea un número válido antes de hacer la consulta
+      if (!currentId || isNaN(currentId) || currentId <= 0) {
+        break;
+      }
+
+      const catalogo = await this.prisma.catalogo.findFirst({
+        where: {
+          id: currentId,
+          activo: true,
+        },
+        select: {
+          id: true,
+          nombre: true,
+          nivel: true,
+          parent_id: true,
+        },
+      });
+
+      if (!catalogo) {
+        break;
+      }
+
+      // Agregar al inicio del path (para mantener orden raíz -> hoja)
+      path.unshift({
+        id: catalogo.id,
+        nombre: catalogo.nombre,
+        nivel: catalogo.nivel,
+      });
+
+      // Continuar con el padre
+      currentId = catalogo.parent_id;
+      depth++;
+    }
+
+    return path;
   }
 }
