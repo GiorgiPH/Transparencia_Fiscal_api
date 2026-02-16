@@ -14,7 +14,7 @@ export class DependenciasController {
   constructor(private readonly dependenciasService: DependenciasService) {}
 
   @Get('tipos')
-  @Roles('ADMIN', 'CARGA', 'EDICION')
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Obtener todos los tipos de dependencia' })
   @ApiResponse({ 
     status: 200, 
@@ -31,7 +31,7 @@ export class DependenciasController {
   }
 
   @Get()
-  @Roles('ADMIN', 'CARGA', 'EDICION')
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Obtener todas las dependencias' })
   @ApiResponse({ 
     status: 200, 
@@ -48,7 +48,7 @@ export class DependenciasController {
   }
 
   @Get('nivel/:nivel')
-  @Roles('ADMIN', 'CARGA', 'EDICION')
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Obtener dependencias por nivel' })
   @ApiParam({ name: 'nivel', description: 'Nivel de dependencia (1, 2 o 3)' })
   @ApiResponse({ 
@@ -67,7 +67,7 @@ export class DependenciasController {
   }
 
   @Get('tipo/:idTipo')
-  @Roles('ADMIN', 'CARGA', 'EDICION')
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Obtener dependencias por tipo' })
   @ApiParam({ name: 'idTipo', description: 'ID del tipo de dependencia' })
   @ApiResponse({ 
@@ -141,7 +141,7 @@ export class DependenciasController {
   }
 
   @Get('seleccion/usuario')
-  @Roles('ADMIN', 'CARGA', 'EDICION')
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Obtener dependencias para selección de usuario (nivel 3)' })
   @ApiResponse({ 
     status: 200, 
