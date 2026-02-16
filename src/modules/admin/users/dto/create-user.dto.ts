@@ -56,7 +56,6 @@ export class CreateUserDto {
   })
   @IsOptional()
   @IsString({ message: 'El teléfono debe ser una cadena de texto' })
-  @Matches(/^[0-9]{10}$/, { message: 'El teléfono debe tener 10 dígitos numéricos' })
   telefono?: string;
 
   @ApiProperty({
