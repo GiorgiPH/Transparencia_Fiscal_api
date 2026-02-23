@@ -23,6 +23,11 @@ export interface StorageConfig {
    * Si es true, se creará la estructura de directorios automáticamente
    */
   autoCreateDirectories: boolean;
+
+  /**
+   * URL base de la API para construir URLs de archivos servidos estáticamente (ej: http://localhost:3001)
+   */
+  apiBaseUrl?: string;
 }
 
 export default registerAs('storage', (): StorageConfig => ({
@@ -32,4 +37,5 @@ export default registerAs('storage', (): StorageConfig => ({
     .split(',')
     .map(ext => ext.trim().toLowerCase()),
   autoCreateDirectories: process.env.AUTO_CREATE_DIRECTORIES !== 'false',
+  apiBaseUrl: process.env.API_BASE_URL || `http://localhost:${process.env.PORT || '3001'}`,
 }));

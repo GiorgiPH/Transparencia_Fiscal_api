@@ -85,6 +85,16 @@ export class CatalogosController {
     return this.catalogosService.findAll(params);
   }
 
+  @Get('periodicidades')
+  @Permissions('REPORTE_VER')
+  @ApiOperation({ summary: 'Obtener todas las periodicidades activas' })
+  @ApiResponse({ status: 200, description: 'Lista de periodicidades activas obtenida exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
+  obtenerPeriodicidades() {
+    return this.catalogosService.obtenerPeriodicidades();
+  }
+
   @Get('raices')
   @Permissions('REPORTE_VER')
   @ApiOperation({ summary: 'Obtener catálogos raíz (sin padre)' })

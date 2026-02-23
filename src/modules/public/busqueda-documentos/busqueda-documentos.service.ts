@@ -156,7 +156,7 @@ export class BusquedaDocumentosService {
     }
 
     // Incrementar contador de descargas (opcional)
-    // await this.registrarDescarga(id);
+    await this.registrarDescarga(id);
 
     return documento;
   }

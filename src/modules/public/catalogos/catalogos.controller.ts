@@ -17,6 +17,7 @@ import {
 import { CatalogosService } from './catalogos.service';
 import { CatalogoHijosResponseDto } from './dto/catalogo-hijos-response.dto';
 import { TipoDocumentoResponseDto } from './dto/tipo-documento-response.dto';
+import { PeriodicidadResponseDto } from './dto/periodicidad-response.dto';
 import { BuscarCatalogosDto } from './dto/buscar-catalogos.dto';
 import { BuscarCatalogosResponseDto } from './dto/buscar-catalogos-response.dto';
 import { Public } from '../../../common/decorators/public.decorator';
@@ -43,6 +44,21 @@ export class CatalogosController {
   async obtenerTiposDocumento(): Promise<TipoDocumentoResponseDto[]> {
     return this.catalogosService.obtenerTiposDocumento();
   }
+
+  @Get('periodicidades')
+  @ApiOperation({
+    summary: 'Obtener todas las periodicidades activas',
+    description: 'Obtiene la lista de todas las periodicidades activas disponibles en el sistema. Útil para alimentar combobox en formularios de carga de documentos.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de periodicidades activas',
+    type: [PeriodicidadResponseDto],
+  })
+  async obtenerPeriodicidades(): Promise<PeriodicidadResponseDto[]> {
+    return this.catalogosService.obtenerPeriodicidades();
+  }
+
   @Get(':id/hijos')
   @ApiOperation({
     summary: 'Obtener hijos de un catálogo',

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsString, IsNotEmpty, IsOptional, IsDateString, IsBoolean } from 'class-validator';
 
 export class UpdateNoticiaDto {
@@ -22,12 +23,18 @@ export class UpdateNoticiaDto {
   @IsOptional()
   imagen_url?: string;
 
+  @ApiProperty({ description: 'link de la noticia', required: false, example: 'https://example.com/imagen-actualizada.jpg' })
+  @IsString()
+  @IsOptional()
+  link?: string;
+
   @ApiProperty({ description: 'Fecha de publicación de la noticia', required: false, example: '2025-12-27T10:00:00.000Z' })
   @IsDateString()
   @IsOptional()
   fecha_publicacion?: Date;
 
   @ApiProperty({ description: 'Indica si la noticia está activa', required: false, example: true })
+  @Transform(({ value }) => (value === undefined ? undefined : value === 'true' || value === true))
   @IsBoolean()
   @IsOptional()
   activo?: boolean;

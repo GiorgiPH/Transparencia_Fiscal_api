@@ -1,5 +1,7 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { join } from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -13,9 +15,14 @@ import { AdminModule } from './modules/admin/admin.module';
 import { PublicModule } from './modules/public/public.module';
 import { MailModule } from './common/services/mail.module';
 import { FileDownloadModule } from './common/services/file-download.module';
+import { UrlUtilsModule } from './common/services/url-utils.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, jwtConfig, corsConfig, storageConfig],
@@ -29,6 +36,7 @@ import { FileDownloadModule } from './common/services/file-download.module';
     PrismaModule,
     MailModule,
     FileDownloadModule,
+    UrlUtilsModule,
     AdminModule,
     PublicModule,
   ],

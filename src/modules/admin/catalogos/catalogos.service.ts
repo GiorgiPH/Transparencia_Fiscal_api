@@ -5,6 +5,7 @@ import { UpdateCatalogoDto } from './dto/update-catalogo.dto';
 import { User } from '../users/entities/user.entity';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { DisponibilidadTipoDocumentoDto } from '../../public/catalogos/dto/disponibilidad-tipo-documento.dto';
+import { PeriodicidadResponseDto } from '../../public/catalogos/dto/periodicidad-response.dto';
 
 @Injectable()
 export class CatalogosService {
@@ -335,5 +336,33 @@ export class CatalogosService {
     }
     
     return response;
+  }
+
+  /**
+   * Obtiene todas las periodicidades activas
+   */
+  async obtenerPeriodicidades(): Promise<PeriodicidadResponseDto[]> {
+    const periodicidades = await this.prisma.periodicidad.findMany({
+      where: {
+        activo: true,
+      },
+      orderBy: [
+        { meses_por_periodo: 'asc' },
+        { nombre: 'asc' },
+      ],
+    });
+
+    return periodicidades.map(periodicidad => this.mapearPeriodicidadADto(periodicidad));
+  }
+
+  private mapearPeriodicidadADto(periodicidad: any): PeriodicidadResponseDto {
+    return {
+      id: periodicidad.id,
+      nombre: periodicidad.nombre,
+      nombrePortal: periodicidad.nombrePortal,
+      mesesPorPeriodo: periodicidad.meses_por_periodo,
+      periodosPorAnio: periodicidad.periodos_por_anio,
+      activo: periodicidad.activo,
+    };
   }
 }

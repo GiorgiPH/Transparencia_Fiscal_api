@@ -4,6 +4,7 @@ export class Noticia {
   descripcion_corta: string;
   contenido: string;
   imagen_url?: string;
+  link?: string;
   fecha_publicacion: Date;
   activo: boolean;
   fecha_creacion: Date;

@@ -235,8 +235,5 @@ export class DocumentosService {
     return this.documentosRepository.count(where);
   }
 
-  private getFileExtension(url: string): string {
-    const match = url.match(/\.([a-zA-Z0-9]+)(?:[?#]|$)/);
-    return match ? match[1].toLowerCase() : 'pdf';
-  }
+  
 }

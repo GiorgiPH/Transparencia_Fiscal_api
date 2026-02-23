@@ -20,11 +20,11 @@ function buildDatabaseUrl(): string {
   }
 
   // Construir URL a partir de variables individuales
-  const dbHost = process.env.DB_HOST || '192.168.105.14';
+  const dbHost = process.env.DB_HOST || 'localhost';
   const dbPort = process.env.DB_PORT || '1433';
   const dbName = process.env.DB_NAME || 'DB_Transparencia_Fiscal';
-  const dbUser = process.env.DB_USER || 'Jorge.Paisanoy';
-  const dbPassword = process.env.DB_PASSWORD || 'Jorge@Paisano.2024';
+  const dbUser = process.env.DB_USER || 'sa';
+  const dbPassword = process.env.DB_PASSWORD || 'RCRsql2023';
   const dbEncrypt = process.env.DB_ENCRYPT || 'false';
   const dbTrustServerCertificate = process.env.DB_TRUST_SERVER_CERTIFICATE || 'true';
 

@@ -11,6 +11,9 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,6 +22,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
   ApiParam,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { EstrategiasComunicacionService } from './estrategias-comunicacion.service';
 import { CreateNoticiaDto } from './dto/create-noticia.dto';
@@ -27,13 +31,20 @@ import { CreateRedSocialDto } from './dto/create-red-social.dto';
 import { UpdateRedSocialDto } from './dto/update-red-social.dto';
 import { Noticia } from './entities/noticia.entity';
 import { RedSocial } from './entities/red-social.entity';
+import { NoticiaCarouselDto } from './dto/noticia-carousel.dto';
 import { Public } from '../../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../../common/guards/roles.guard';
+import { TransformInterceptor } from '../../../common/interceptors/response.interceptor';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { User } from '../../admin/users/entities/user.entity';
 
 @ApiTags('Estrategias de Comunicación')
 @Controller('estrategias-comunicacion')
+@UseInterceptors(TransformInterceptor)
+@UseInterceptors(ClassSerializerInterceptor)
 export class EstrategiasComunicacionController {
   constructor(
     private readonly estrategiasComunicacionService: EstrategiasComunicacionService,
@@ -84,6 +95,22 @@ export class EstrategiasComunicacionController {
     return this.estrategiasComunicacionService.getNoticiasRecientes(
       limit ? parseInt(limit, 10) : 5,
     );
+  }
+
+  @Public()
+  @Get('noticias/carousel')
+  @ApiOperation({ summary: 'Obtener noticias optimizadas para carrusel (máximo 5 activas)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Límite de noticias (máximo 5)', example: 5 })
+  @ApiResponse({
+    status: 200,
+    description: 'Noticias optimizadas para carrusel con solo campos necesarios',
+    type: [NoticiaCarouselDto],
+  })
+  async getNoticiasCarousel(@Query('limit') limit?: string): Promise<NoticiaCarouselDto[]> {
+    const limitNumber = limit ? parseInt(limit, 10) : 5;
+    // Asegurar que el límite máximo sea 5 para optimización
+    const finalLimit = Math.min(limitNumber, 5);
+    return this.estrategiasComunicacionService.getNoticiasCarousel(finalLimit);
   }
 
   @Public()
@@ -154,15 +181,21 @@ export class EstrategiasComunicacionController {
   @Roles('ADMIN', 'CARGA', 'EDICION')
   @Post('admin/noticias')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Crear una nueva noticia (administrativo)' })
+  @ApiOperation({ summary: 'Crear una nueva noticia con imagen (administrativo)' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('imagen'))
   @ApiResponse({
     status: 201,
     description: 'Noticia creada exitosamente',
     type: Noticia,
   })
   @ApiResponse({ status: 400, description: 'Datos de entrada inválidos' })
-  async createNoticia(@Body() createNoticiaDto: CreateNoticiaDto): Promise<Noticia> {
-    return this.estrategiasComunicacionService.createNoticia(createNoticiaDto);
+  async createNoticia(
+    @Body() createNoticiaDto: CreateNoticiaDto,
+    @UploadedFile() imagen: any,
+    @CurrentUser() user: User,
+  ): Promise<Noticia> {
+    return this.estrategiasComunicacionService.createNoticiaWithImage(createNoticiaDto, imagen, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -185,7 +218,9 @@ export class EstrategiasComunicacionController {
   @Roles('ADMIN', 'CARGA', 'EDICION')
   @Patch('admin/noticias/:id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Actualizar una noticia (administrativo)' })
+  @ApiOperation({ summary: 'Actualizar una noticia con imagen opcional (administrativo)' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('imagen'))
   @ApiParam({ name: 'id', description: 'ID de la noticia' })
   @ApiResponse({
     status: 200,
@@ -196,8 +231,10 @@ export class EstrategiasComunicacionController {
   async updateNoticia(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateNoticiaDto: UpdateNoticiaDto,
+    @UploadedFile() imagen: any,
+    @CurrentUser() user: User,
   ): Promise<Noticia> {
-    return this.estrategiasComunicacionService.updateNoticia(id, updateNoticiaDto);
+    return this.estrategiasComunicacionService.updateNoticiaWithImage(id, updateNoticiaDto, imagen, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

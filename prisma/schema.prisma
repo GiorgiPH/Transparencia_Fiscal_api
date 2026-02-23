@@ -134,6 +134,8 @@ model Documento {
   id                  Int           @id @default(autoincrement()) @map("documento_id")
   catalogo_id         Int           @map("catalogo_id")
   tipo_documento_id   Int           @map("tipo_documento_id")
+  periodicidad_id     Int?          @map("periodicidad_id")
+
   nombre              String?
   descripcion         String?
   ejercicio_fiscal    Int           @map("ejercicio_fiscal")
@@ -145,13 +147,16 @@ model Documento {
   fecha_publicacion   DateTime?     @map("fecha_publicacion")
   activo              Boolean       @default(true) @map("activo")
   institucion_emisora String?       @map("institucion_emisora")
-  periodicidad        String?       @map("periodicidad")
+  periodo_numero      Int           @map("periodo_numero")
+
   fecha_creacion      DateTime      @default(now()) @map("fecha_creacion")
   fecha_modificacion  DateTime      @updatedAt @map("fecha_modificacion")
   usuario_creacion_id Int           @map("usuario_creacion_id")
-  usuario_modif_id    Int?          @map("usuario_modif_id")
+  usuario_modif_id    Int?
+
   catalogo            Catalogo      @relation(fields: [catalogo_id], references: [id], onUpdate: NoAction)
   tipo_documento      TipoDocumento @relation(fields: [tipo_documento_id], references: [id], onUpdate: NoAction)
+  periodicidad        Periodicidad? @relation(fields: [periodicidad_id], references: [id], onUpdate: NoAction)
 
   @@map("documentos")
 }
@@ -196,6 +201,7 @@ model Noticia {
   descripcion_corta   String   @map("descripcion_corta")
   contenido           String   @map("contenido")
   imagen_url          String?  @map("imagen_url")
+  link                String?  @map("link")
   fecha_publicacion   DateTime @map("fecha_publicacion")
   activo              Boolean  @default(true) @map("activo")
   fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
@@ -243,4 +249,17 @@ model Dependencia {
   @@index([idPadre], map: "IX_Dependencias_IdPadre")
   @@index([idTipo], map: "IX_Dependencias_IdTipo")
   @@map("Dependencias")
+}
+
+model Periodicidad {
+  id               Int         @id @default(autoincrement()) @map("periodicidad_id")
+  nombre           String      @map("nombre")
+  nombre_portal    String      @map("nombre_portal")
+  meses_por_periodo Int        @map("meses_por_periodo")
+  periodos_por_anio Int        @map("periodos_por_anio")
+  activo           Boolean     @default(true) @map("activo")
+
+  documentos       Documento[]
+
+  @@map("periodicidades")
 }

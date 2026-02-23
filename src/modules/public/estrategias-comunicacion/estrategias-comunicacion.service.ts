@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { EstrategiasComunicacionRepository } from './estrategias-comunicacion.repository';
 import { CreateNoticiaDto } from './dto/create-noticia.dto';
 import { UpdateNoticiaDto } from './dto/update-noticia.dto';
@@ -6,11 +7,20 @@ import { CreateRedSocialDto } from './dto/create-red-social.dto';
 import { UpdateRedSocialDto } from './dto/update-red-social.dto';
 import { Noticia } from './entities/noticia.entity';
 import { RedSocial } from './entities/red-social.entity';
+import { NoticiaCarouselDto } from './dto/noticia-carousel.dto';
+import { FileUploadService } from '../../../common/services/file-upload.service';
+import { UrlUtilsService } from '../../../common/services/url-utils.service';
+import { User } from '../../admin/users/entities/user.entity';
+import { StorageConfig } from '../../../config/storage.config';
+import { link } from 'fs';
 
 @Injectable()
 export class EstrategiasComunicacionService {
   constructor(
     private readonly estrategiasComunicacionRepository: EstrategiasComunicacionRepository,
+    private readonly fileUploadService: FileUploadService,
+    private readonly urlUtilsService: UrlUtilsService,
+    private readonly configService: ConfigService,
   ) {}
 
   // Métodos para Noticias
@@ -18,6 +28,70 @@ export class EstrategiasComunicacionService {
   async createNoticia(createNoticiaDto: CreateNoticiaDto): Promise<Noticia> {
     const noticia = await this.estrategiasComunicacionRepository.createNoticia(createNoticiaDto);
     return this.mapToNoticiaEntity(noticia);
+  }
+
+  async createNoticiaWithImage(
+    createNoticiaDto: CreateNoticiaDto,
+    imagen: any | undefined,
+    _user: User,
+  ): Promise<Noticia> {
+    let imagenUrl = createNoticiaDto.imagen_url;
+
+    if (imagen) {
+      const uploadedFile = await this.fileUploadService.uploadFile({
+        file: imagen,
+        subdirectory: 'noticias',
+        customName: createNoticiaDto.titulo,
+        allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+        maxSize: 5 * 1024 * 1024, // 5MB
+      });
+      imagenUrl = uploadedFile.relativePath;
+    }
+
+    const data: CreateNoticiaDto = {
+      ...createNoticiaDto,
+      imagen_url: imagenUrl,
+      fecha_publicacion: new Date(createNoticiaDto.fecha_publicacion as string | Date),
+    };
+
+    const noticia = await this.estrategiasComunicacionRepository.createNoticia(data);
+    return this.mapToNoticiaEntity(noticia);
+  }
+
+  async updateNoticiaWithImage(
+    id: number,
+    updateNoticiaDto: UpdateNoticiaDto,
+    imagen: any | undefined,
+    _user: User,
+  ): Promise<Noticia> {
+    const noticia = await this.estrategiasComunicacionRepository.findNoticiaById(id);
+    if (!noticia) {
+      throw new NotFoundException('Noticia no encontrada');
+    }
+
+    const data: UpdateNoticiaDto = { ...updateNoticiaDto };
+
+    if (imagen) {
+      if (noticia.imagen_url) {
+        await this.fileUploadService.deleteFile(noticia.imagen_url);
+      }
+
+      const uploadedFile = await this.fileUploadService.uploadFile({
+        file: imagen,
+        subdirectory: 'noticias',
+        customName: updateNoticiaDto.titulo || noticia.titulo,
+        allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+        maxSize: 5 * 1024 * 1024, // 5MB
+      });
+      data.imagen_url = uploadedFile.relativePath;
+    }
+
+    if (updateNoticiaDto.fecha_publicacion !== undefined) {
+      data.fecha_publicacion = new Date(updateNoticiaDto.fecha_publicacion as string | Date);
+    }
+
+    const noticiaActualizada = await this.estrategiasComunicacionRepository.updateNoticia(id, data);
+    return this.mapToNoticiaEntity(noticiaActualizada);
   }
 
   async findAllNoticias(params?: {
@@ -72,6 +146,11 @@ export class EstrategiasComunicacionService {
   async getNoticiasRecientes(limit: number = 5): Promise<Noticia[]> {
     const noticias = await this.estrategiasComunicacionRepository.getNoticiasRecientes(limit);
     return noticias.map(noticia => this.mapToNoticiaEntity(noticia));
+  }
+
+  async getNoticiasCarousel(limit: number = 5): Promise<NoticiaCarouselDto[]> {
+    const noticias = await this.estrategiasComunicacionRepository.getNoticiasRecientes(limit);
+    return noticias.map(noticia => this.mapToNoticiaCarouselDto(noticia));
   }
 
   async countNoticias(activo?: boolean): Promise<number> {
@@ -152,10 +231,38 @@ export class EstrategiasComunicacionService {
       descripcion_corta: noticia.descripcion_corta,
       contenido: noticia.contenido,
       imagen_url: noticia.imagen_url,
+      link: noticia.link,
       fecha_publicacion: noticia.fecha_publicacion,
       activo: noticia.activo,
       fecha_creacion: noticia.fecha_creacion,
       fecha_actualizacion: noticia.fecha_actualizacion,
+    };
+  }
+
+  private mapToNoticiaCarouselDto(noticia: any): NoticiaCarouselDto {
+    // Formatear la fecha para mostrar en el carrusel
+    const fechaPublicacion = new Date(noticia.fecha_publicacion);
+    const fechaFormateada = this.formatDateForCarousel(fechaPublicacion);
+    
+    // Crear URL para ver más detalles
+    const url = `/estrategias-comunicacion/noticias/${noticia.id}`;
+    
+    // Usar el título como texto alternativo para la imagen si no hay uno específico
+    const imagenAlt = noticia.titulo;
+
+    // imagen_url completa para servir desde /uploads (ej: http://localhost:3001/uploads/noticias/xxx.jpg)
+    const imagenUrlCompleta = this.urlUtilsService.getImageUrl(noticia.imagen_url);
+
+    return {
+      id: noticia.id,
+      titulo: noticia.titulo,
+      fecha_formateada: fechaFormateada,
+      descripcion_corta: noticia.descripcion_corta,
+      imagen_url: imagenUrlCompleta,
+      link: noticia.link,
+      imagen_alt: imagenAlt,
+      url: noticia.link,
+      fecha_publicacion: noticia.fecha_publicacion,
     };
   }
 
@@ -171,5 +278,17 @@ export class EstrategiasComunicacionService {
       fecha_creacion: redSocial.fecha_creacion,
       fecha_actualizacion: redSocial.fecha_actualizacion,
     };
+  }
+
+  private formatDateForCarousel(date: Date): string {
+    const months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `${month} ${year}`;
   }
 }
