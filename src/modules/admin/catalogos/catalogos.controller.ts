@@ -22,6 +22,7 @@ import {
 import { CatalogosService } from './catalogos.service';
 import { CreateCatalogoDto } from './dto/create-catalogo.dto';
 import { UpdateCatalogoDto } from './dto/update-catalogo.dto';
+import { EstadisticasCatalogosResponseDto } from './dto/estadisticas-catalogos-response.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
@@ -143,18 +144,7 @@ export class CatalogosController {
     return this.catalogosService.findChildren(idNum);
   }
 
-  @Get(':id/with-children')
-  @Permissions('REPORTE_VER')
-  @ApiOperation({ summary: 'Obtener catálogo con todos sus hijos anidados' })
-  @ApiParam({ name: 'id', description: 'ID del catálogo' })
-  @ApiResponse({ status: 200, description: 'Catálogo con hijos obtenido exitosamente' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
-  @ApiResponse({ status: 404, description: 'Catálogo no encontrado' })
-  findCatalogWithChildren(@Param('id') id: string) {
-    const idNum = parseInt(id, 10);
-    return this.catalogosService.findCatalogWithChildren(idNum);
-  }
+
 
   @Get(':id/document-availability')
   @Permissions('REPORTE_VER')
@@ -215,13 +205,16 @@ export class CatalogosController {
 
   @Get('estadisticas/total')
   @Permissions('REPORTE_VER')
-  @ApiOperation({ summary: 'Obtener estadísticas de catálogos' })
-  @ApiResponse({ status: 200, description: 'Estadísticas obtenidas exitosamente' })
+  @ApiOperation({ summary: 'Obtener estadísticas detalladas de catálogos' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Estadísticas obtenidas exitosamente',
+    type: EstadisticasCatalogosResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
   async getStats() {
-    const total = await this.catalogosService.count();
-    return { total };
+    return this.catalogosService.getEstadisticas();
   }
 
   @Patch(':id/orden/:orden')

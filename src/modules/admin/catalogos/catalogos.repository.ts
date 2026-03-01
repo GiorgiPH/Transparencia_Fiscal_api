@@ -199,4 +199,86 @@ export class CatalogosRepository {
     });
     return count > 0;
   }
+
+  async getEstadisticas(): Promise<{
+    totalCatalogos: number;
+    totalDocumentos: number;
+    catalogosPorNivel: { nivel0: number; nivel1: number; nivel2: number };
+    catalogosConPermisoDocumentos: number;
+    catalogosRaiz: number;
+    catalogosConDocumentos: number;
+  }> {
+    // Obtener total de catálogos activos
+    const totalCatalogos = await this.prisma.catalogo.count({
+      where: { activo: true },
+    });
+
+    // Obtener total de documentos activos
+    const totalDocumentos = await this.prisma.documento.count({
+      where: { activo: true },
+    });
+
+    // Obtener catálogos por nivel (0, 1, 2)
+    const catalogosNivel0 = await this.prisma.catalogo.count({
+      where: { 
+        nivel: 0,
+        activo: true 
+      },
+    });
+
+    const catalogosNivel1 = await this.prisma.catalogo.count({
+      where: { 
+        nivel: 1,
+        activo: true 
+      },
+    });
+
+    const catalogosNivel2 = await this.prisma.catalogo.count({
+      where: { 
+        nivel: 2,
+        activo: true 
+      },
+    });
+
+    // Obtener catálogos que permiten documentos
+    const catalogosConPermisoDocumentos = await this.prisma.catalogo.count({
+      where: { 
+        permite_documentos: true,
+        activo: true 
+      },
+    });
+
+    // Obtener catálogos raíz (sin padre)
+    const catalogosRaiz = await this.prisma.catalogo.count({
+      where: { 
+        parent_id: null,
+        activo: true 
+      },
+    });
+
+    // Obtener catálogos que tienen al menos un documento activo
+    const catalogosConDocumentos = await this.prisma.catalogo.count({
+      where: {
+        activo: true,
+        documentos: {
+          some: {
+            activo: true
+          }
+        }
+      },
+    });
+
+    return {
+      totalCatalogos,
+      totalDocumentos,
+      catalogosPorNivel: {
+        nivel0: catalogosNivel0,
+        nivel1: catalogosNivel1,
+        nivel2: catalogosNivel2,
+      },
+      catalogosConPermisoDocumentos,
+      catalogosRaiz,
+      catalogosConDocumentos,
+    };
+  }
 }

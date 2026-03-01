@@ -20,6 +20,7 @@ import { TipoDocumentoResponseDto } from './dto/tipo-documento-response.dto';
 import { PeriodicidadResponseDto } from './dto/periodicidad-response.dto';
 import { BuscarCatalogosDto } from './dto/buscar-catalogos.dto';
 import { BuscarCatalogosResponseDto } from './dto/buscar-catalogos-response.dto';
+import { TopCatalogosResponseDto } from './dto/top-catalogos-response.dto';
 import { Public } from '../../../common/decorators/public.decorator';
 import { TransformInterceptor } from '../../../common/interceptors/response.interceptor';
 
@@ -141,5 +142,19 @@ export class CatalogosController {
   })
   async buscarCatalogos(@Query() buscarDto: BuscarCatalogosDto): Promise<BuscarCatalogosResponseDto[]> {
     return this.catalogosService.buscarCatalogos(buscarDto.q || '');
+  }
+
+  @Get('top')
+  @ApiOperation({
+    summary: 'Obtener los catálogos con más documentos (top 5)',
+    description: 'Obtiene los 5 catálogos con mayor número de documentos activos, ordenados por cantidad de documentos descendente. Incluye información de disponibilidad de tipos de documento.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de los 5 catálogos con más documentos',
+    type: [TopCatalogosResponseDto],
+  })
+  async obtenerTopCatalogos(): Promise<TopCatalogosResponseDto[]> {
+    return this.catalogosService.obtenerTopCatalogos();
   }
 }

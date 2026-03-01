@@ -23,8 +23,8 @@ model User {
   usuario_creacion_id      Int?               @map("usuario_creacion_id")
   usuario_modif_id         Int?               @map("usuario_modif_id")
   dependenciaId            Int?               @map("institucion_id")
-  dependencia              Dependencia?       @relation(fields: [dependenciaId], references: [id], onUpdate: NoAction)
   refreshTokens            RefreshToken[]
+  dependencia              Dependencia?       @relation(fields: [dependenciaId], references: [id], onUpdate: NoAction)
   roles                    UsuarioRol[]
   verificationCodes        VerificationCode[]
 
@@ -134,8 +134,6 @@ model Documento {
   id                  Int           @id @default(autoincrement()) @map("documento_id")
   catalogo_id         Int           @map("catalogo_id")
   tipo_documento_id   Int           @map("tipo_documento_id")
-  periodicidad_id     Int?          @map("periodicidad_id")
-
   nombre              String?
   descripcion         String?
   ejercicio_fiscal    Int           @map("ejercicio_fiscal")
@@ -147,16 +145,18 @@ model Documento {
   fecha_publicacion   DateTime?     @map("fecha_publicacion")
   activo              Boolean       @default(true) @map("activo")
   institucion_emisora String?       @map("institucion_emisora")
-  periodo_numero      Int           @map("periodo_numero")
-
   fecha_creacion      DateTime      @default(now()) @map("fecha_creacion")
   fecha_modificacion  DateTime      @updatedAt @map("fecha_modificacion")
   usuario_creacion_id Int           @map("usuario_creacion_id")
   usuario_modif_id    Int?
-
+  es_anual  	        Boolean       @default(false) @map("es_anual")
+  periodicidad_id     Int?          @map("periodicidad_id")
+  periodo_numero      Int           @map("periodo_numero")
+  contador_descarga   Int?          @default(0, map: "DF__documento__conta__0697FACD")
+  contador_descargar  Int?          @default(0, map: "DF__documento__conta__078C1F06") @map("contador_descargar")
   catalogo            Catalogo      @relation(fields: [catalogo_id], references: [id], onUpdate: NoAction)
-  tipo_documento      TipoDocumento @relation(fields: [tipo_documento_id], references: [id], onUpdate: NoAction)
   periodicidad        Periodicidad? @relation(fields: [periodicidad_id], references: [id], onUpdate: NoAction)
+  tipo_documento      TipoDocumento @relation(fields: [tipo_documento_id], references: [id], onUpdate: NoAction)
 
   @@map("documentos")
 }
@@ -201,11 +201,11 @@ model Noticia {
   descripcion_corta   String   @map("descripcion_corta")
   contenido           String   @map("contenido")
   imagen_url          String?  @map("imagen_url")
-  link                String?  @map("link")
   fecha_publicacion   DateTime @map("fecha_publicacion")
   activo              Boolean  @default(true) @map("activo")
   fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
   fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
+  link                String?  @map("link")
 
   @@map("noticias")
 }
@@ -240,7 +240,7 @@ model Dependencia {
   nivel     Int             @map("Nivel")
   orden     Int             @default(0, map: "DF__Dependenc__Orden__04E4BC85") @map("Orden")
   activo    Boolean         @default(true, map: "DF__Dependenc__Activ__05D8E0BE") @map("Activo")
-  fechaAlta DateTime        @default(now(), map: "DF__Dependenc__Fecha__06CD04F7") @map("FechaAlta") @db.DateTime
+  fechaAlta DateTime        @default(now(), map: "DF__Dependenc__Fecha__540C7B00") @map("FechaAlta") @db.DateTime
   padre     Dependencia?    @relation("DependenciaParent", fields: [idPadre], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Dependencias_Padre")
   hijos     Dependencia[]   @relation("DependenciaParent")
   tipo      TipoDependencia @relation(fields: [idTipo], references: [id], onUpdate: NoAction, map: "FK_Dependencias_Tipo")
@@ -252,14 +252,14 @@ model Dependencia {
 }
 
 model Periodicidad {
-  id               Int         @id @default(autoincrement()) @map("periodicidad_id")
-  nombre           String      @map("nombre")
-  nombre_portal    String      @map("nombre_portal")
-  meses_por_periodo Int        @map("meses_por_periodo")
-  periodos_por_anio Int        @map("periodos_por_anio")
-  activo           Boolean     @default(true) @map("activo")
-
-  documentos       Documento[]
+  id                Int         @id @default(autoincrement()) @map("periodicidad_id")
+  nombre            String      @map("nombre")
+  meses_por_periodo Int         @map("meses_por_periodo")
+  periodos_por_anio Int         @map("periodos_por_anio")
+  activo            Boolean     @default(true) @map("activo")
+  nombre_portal     String      @map("nombre_portal")
+  NombrePortal      String?     @db.VarChar(500)
+  documentos        Documento[]
 
   @@map("periodicidades")
 }

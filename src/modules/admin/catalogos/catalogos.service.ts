@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { CatalogosRepository } from './catalogos.repository';
 import { CreateCatalogoDto } from './dto/create-catalogo.dto';
 import { UpdateCatalogoDto } from './dto/update-catalogo.dto';
+import { EstadisticasCatalogosResponseDto } from './dto/estadisticas-catalogos-response.dto';
 import { User } from '../users/entities/user.entity';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { DisponibilidadTipoDocumentoDto } from '../../public/catalogos/dto/disponibilidad-tipo-documento.dto';
@@ -364,5 +365,20 @@ export class CatalogosService {
       periodosPorAnio: periodicidad.periodos_por_anio,
       activo: periodicidad.activo,
     };
+  }
+
+  async getEstadisticas() {
+    const estadisticas = await this.catalogosRepository.getEstadisticas();
+    
+    return new EstadisticasCatalogosResponseDto(
+      estadisticas.totalCatalogos,
+      estadisticas.totalDocumentos,
+      estadisticas.catalogosPorNivel.nivel0,
+      estadisticas.catalogosPorNivel.nivel1,
+      estadisticas.catalogosPorNivel.nivel2,
+      estadisticas.catalogosConPermisoDocumentos,
+      estadisticas.catalogosRaiz,
+      estadisticas.catalogosConDocumentos,
+    );
   }
 }

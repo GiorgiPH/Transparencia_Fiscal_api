@@ -112,7 +112,7 @@ export class CreateDocumentoDto {
     required: false,
   })
   @IsString({ message: 'Las palabras clave deben ser una cadena de texto' })
-  periodicidad?: string;
+  periodicidad?: number;
 
 
   @ApiProperty({

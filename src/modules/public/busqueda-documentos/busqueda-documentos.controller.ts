@@ -116,7 +116,6 @@ export class BusquedaDocumentosController {
     description: 'Documento no encontrado o no disponible',
   })
   async descargarDocumento(@Param('id') id: string, @Res() res: express.Response) {
-    //console.log('🔥 ENTRÓ A DESCARGAR 🔥');
 
     const documento = await this.busquedaDocumentosService.obtenerDocumentoPorId(id);
     

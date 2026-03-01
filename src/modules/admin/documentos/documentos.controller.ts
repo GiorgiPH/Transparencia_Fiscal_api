@@ -90,25 +90,7 @@ export class DocumentosController {
     return this.documentosService.findAll(params);
   }
 
-  @Get('publicos')
-  @ApiOperation({ summary: 'Obtener documentos públicos' })
-  @ApiQuery({ name: 'skip', required: false, type: Number, description: 'Número de registros a saltar' })
-  @ApiQuery({ name: 'take', required: false, type: Number, description: 'Número de registros a tomar' })
-  @ApiResponse({ status: 200, description: 'Lista de documentos públicos obtenida exitosamente' })
-  findPublicDocuments(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
-  ) {
-    const params: any = {};
-    
-    if (skip) params.skip = parseInt(skip, 10);
-    if (take) params.take = parseInt(take, 10);
-    
-    params.where = { activo: true };
-    params.orderBy = { fecha_creacion: 'desc' };
-    
-    return this.documentosService.findPublicDocuments(params);
-  }
+  
 
   @Get('catalogo/:catalogoId')
   @Permissions('REPORTE_VER')
@@ -134,14 +116,6 @@ export class DocumentosController {
     return this.documentosService.findByCatalogoId(catalogoIdNum, params);
   }
 
-  @Get('recientes')
-  @ApiOperation({ summary: 'Obtener documentos recientes' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Número máximo de documentos (default: 10)' })
-  @ApiResponse({ status: 200, description: 'Documentos recientes obtenidos exitosamente' })
-  getRecentDocuments(@Query('limit') limit?: string) {
-    const limitNum = limit ? parseInt(limit, 10) : 10;
-    return this.documentosService.getRecentDocuments(limitNum);
-  }
 
   @Get('buscar')
   @Permissions('REPORTE_VER')

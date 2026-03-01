@@ -227,9 +227,23 @@ export class BusquedaDocumentosService {
   }
 
   private async registrarDescarga(documentoId: string) {
-    // Implementar registro de descargas si es necesario
-    // Esto podría ir a una tabla de bitácora
-    console.log(`Descarga registrada para documento: ${documentoId}`);
+    try {
+      const idNum = parseInt(documentoId, 10);
+      // Incrementar el contador de descargas del documento
+      await this.prisma.documento.update({
+        where: { id: idNum },
+        data: {
+          contador_descargar: {
+            increment: 1,
+          },
+        },
+      });
+      
+      console.log(`Contador de descargas incrementado para documento: ${documentoId}`);
+    } catch (error) {
+      console.error(`Error al registrar descarga para documento ${documentoId}:`, error);
+      // No lanzar error para no interrumpir el flujo principal
+    }
   }
   // En tu BusquedaDocumentosService, agrega:
   private descendentCache = new Map<number, number[]>();

@@ -45,15 +45,22 @@ export class DocumentosService {
       ruta_archivo: uploadedFile.relativePath,
       extension: uploadedFile.extension.replace('.', ''),
       peso_archivo: uploadedFile.size.toString(),
-      periodicidad: createDocumentoDto.periodicidad,
       fecha_publicacion: createDocumentoDto.fecha_publicacion ? new Date(createDocumentoDto.fecha_publicacion) : null,
       institucion_emisora: 'Gobierno del Estado de Morelos',
       usuario_creacion_id: user.id,
+      periodo_numero:0,
       catalogo: {
         connect: { id: createDocumentoDto.catalogo_id },
       },
-    };
 
+      periodicidad: Number(createDocumentoDto.periodicidad)
+      ? {
+          connect: {
+            id: Number(createDocumentoDto.periodicidad)
+          }
+        }
+      : undefined
+    };
     // Si se proporciona tipo_documento_id, conectar con TipoDocumento
     if (createDocumentoDto.tipo_documento_id) {
       data.tipo_documento = {

@@ -5,6 +5,7 @@ import { DisponibilidadTipoDocumentoDto } from './dto/disponibilidad-tipo-docume
 import { TipoDocumentoResponseDto } from './dto/tipo-documento-response.dto';
 import { BuscarCatalogosResponseDto, CatalogoPathItemDto } from './dto/buscar-catalogos-response.dto';
 import { PeriodicidadResponseDto } from './dto/periodicidad-response.dto';
+import { TopCatalogosResponseDto } from './dto/top-catalogos-response.dto';
 
 @Injectable()
 export class CatalogosService {
@@ -239,27 +240,47 @@ export class CatalogosService {
    * Busca catálogos por texto y devuelve los resultados con su path completo
    */
   async buscarCatalogos(texto: string): Promise<BuscarCatalogosResponseDto[]> {
-    if (!texto || texto.trim().length < 2) {
+    if (!texto || texto.trim().length === 0) {
       return [];
     }
 
     const searchText = texto.trim().toLowerCase();
-
-    // Buscar catálogos que coincidan con el texto de búsqueda
-    const catalogosCoincidentes = await this.prisma.catalogo.findMany({
-      where: {
-        activo: true,
-        OR: [
-          { nombre: { contains: searchText } },
-          { descripcion: { contains: searchText } },
+    
+    // Verificar si el texto de búsqueda es un número (posible ID)
+    const isNumericSearch = /^\d+$/.test(searchText);
+    
+    let catalogosCoincidentes;
+    
+    if (isNumericSearch) {
+      // Búsqueda por ID exacto
+      const catalogoId = parseInt(searchText, 10);
+      const catalogo = await this.prisma.catalogo.findFirst({
+        where: {
+          id: catalogoId,
+          activo: true,
+        },
+      });
+      
+      catalogosCoincidentes = catalogo ? [catalogo] : [];
+    } else if (searchText.length < 2) {
+      return [];
+    } else {
+      // Búsqueda por texto (nombre o descripción)
+      catalogosCoincidentes = await this.prisma.catalogo.findMany({
+        where: {
+          activo: true,
+          OR: [
+            { nombre: { contains: searchText } },
+            { descripcion: { contains: searchText } },
+          ],
+        },
+        orderBy: [
+          { nivel: 'asc' },
+          { orden: 'asc' },
+          { nombre: 'asc' },
         ],
-      },
-      orderBy: [
-        { nivel: 'asc' },
-        { orden: 'asc' },
-        { nombre: 'asc' },
-      ],
-    });
+      });
+    }
 
     if (catalogosCoincidentes.length === 0) {
       return [];
@@ -369,5 +390,68 @@ export class CatalogosService {
       periodosPorAnio: periodicidad.periodos_por_anio,
       activo: periodicidad.activo,
     };
+  }
+
+  /**
+   * Obtiene los catálogos con más descargas (top 5)
+   */
+  async obtenerTopCatalogos(): Promise<TopCatalogosResponseDto[]> {
+    // Obtener todos los catálogos activos que permiten documentos
+    const catalogos = await this.prisma.catalogo.findMany({
+      where: {
+        activo: true,
+        permite_documentos: true,
+      },
+      include: {
+        documentos: {
+          where: {
+            activo: true,
+          },
+          select: {
+            contador_descargar: true,
+          },
+        },
+      },
+      take: 5, // Limitar a los top 5
+    });
+
+    if (catalogos.length === 0) {
+      return [];
+    }
+
+    // Calcular el total de descargas para cada catálogo
+    const catalogosConDescargas = catalogos.map(catalogo => {
+      // Usar type assertion para acceder a documentos
+      const catalogoConDocumentos = catalogo as any;
+      const documentos = catalogoConDocumentos.documentos as Array<{ contador_descargar: number }>;
+      const totalDescargas = documentos.reduce(
+        (sum, doc) => sum + (doc.contador_descargar || 0),
+        0
+      );
+      
+      return {
+        ...catalogo,
+        totalDescargas,
+      };
+    });
+
+    // Ordenar por total de descargas (descendente)
+    catalogosConDescargas.sort((a, b) => b.totalDescargas - a.totalDescargas);
+
+    // Obtener disponibilidad para los catálogos
+    const disponibilidadPorCatalogo = await this.obtenerDisponibilidadParaCatalogos(catalogosConDescargas);
+
+    // Mapear los catálogos al DTO de respuesta con posición
+    return catalogosConDescargas.map((catalogo, index) => {
+      const catalogoDto = this.mapearCatalogoADto(catalogo, disponibilidadPorCatalogo);
+      
+      const topCatalogoDto: TopCatalogosResponseDto = {
+        ...catalogoDto,
+        totalDocumentos: catalogo.totalDescargas, // Ahora es total de descargas, no cantidad de documentos
+        posicion: index + 1,
+      };
+
+      return topCatalogoDto;
+    });
   }
 }
