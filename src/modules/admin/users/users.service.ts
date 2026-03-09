@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, ConflictException, 
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { EstadisticasUsuariosResponseDto } from './dto/estadisticas-usuarios-response.dto';
 import { User } from './entities/user.entity';
 import { FileUploadService } from '../../../common/services/file-upload.service';
 import * as bcrypt from 'bcrypt';
@@ -207,5 +208,21 @@ export class UsersService {
 
   async getAllRoles(params?: { activo?: boolean }): Promise<any[]> {
     return this.usersRepository.findAllRoles(params);
+  }
+
+  async getEstadisticas(): Promise<EstadisticasUsuariosResponseDto> {
+    const estadisticas = await this.usersRepository.getEstadisticas();
+    
+    return new EstadisticasUsuariosResponseDto(
+      estadisticas.totalUsuariosActivos,
+      estadisticas.totalUsuariosInactivos,
+      estadisticas.totalUsuariosAdmin,
+      estadisticas.totalUsuariosCarga,
+      estadisticas.totalUsuariosEdicion,
+      estadisticas.totalUsuariosCon2FA,
+      estadisticas.totalUsuariosConFotoPerfil,
+      estadisticas.totalUsuariosConDependencia,
+      estadisticas.totalUsuariosUltimoMes,
+    );
   }
 }

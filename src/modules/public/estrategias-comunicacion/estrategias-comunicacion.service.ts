@@ -8,6 +8,7 @@ import { UpdateRedSocialDto } from './dto/update-red-social.dto';
 import { Noticia } from './entities/noticia.entity';
 import { RedSocial } from './entities/red-social.entity';
 import { NoticiaCarouselDto } from './dto/noticia-carousel.dto';
+import { EstadisticasEstrategiasComunicacionResponseDto } from './dto/estadisticas-estrategias-comunicacion-response.dto';
 import { FileUploadService } from '../../../common/services/file-upload.service';
 import { UrlUtilsService } from '../../../common/services/url-utils.service';
 import { User } from '../../admin/users/entities/user.entity';
@@ -218,8 +219,17 @@ export class EstrategiasComunicacionService {
 
   // Métodos para estadísticas
 
-  async getEstadisticas() {
-    return this.estrategiasComunicacionRepository.getEstadisticas();
+  async getEstadisticas(): Promise<EstadisticasEstrategiasComunicacionResponseDto> {
+    const estadisticas = await this.estrategiasComunicacionRepository.getEstadisticas();
+    
+    return new EstadisticasEstrategiasComunicacionResponseDto(
+      estadisticas.totalNoticias,
+      estadisticas.noticiasActivas,
+      estadisticas.noticiasInactivas,
+      estadisticas.totalRedesSociales,
+      estadisticas.redesSocialesActivas,
+      estadisticas.redesSocialesInactivas,
+    );
   }
 
   // Métodos de mapeo

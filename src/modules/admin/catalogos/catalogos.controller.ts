@@ -144,20 +144,24 @@ export class CatalogosController {
     return this.catalogosService.findChildren(idNum);
   }
 
-
-
-  @Get(':id/document-availability')
+  @Get(':catalogoId/periodos/:anio')
   @Permissions('REPORTE_VER')
-  @ApiOperation({ summary: 'Obtener disponibilidad de documentos de un catálogo' })
-  @ApiParam({ name: 'id', description: 'ID del catálogo' })
-  @ApiResponse({ status: 200, description: 'Disponibilidad de documentos obtenida exitosamente' })
+  @ApiOperation({ summary: 'Obtener periodicidad de un catálogo para un año específico' })
+  @ApiParam({ name: 'catalogoId', description: 'ID del catálogo' })
+  @ApiParam({ name: 'anio', description: 'Año fiscal' })
+  @ApiResponse({ status: 200, description: 'Periodicidad obtenida exitosamente' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
   @ApiResponse({ status: 404, description: 'Catálogo no encontrado' })
-  findDocumentAvailability(@Param('id') id: string) {
-    const idNum = parseInt(id, 10);
-    return this.catalogosService.findDocumentAvailability(idNum);
+  obtenerPeriodicidadPorAnio(
+    @Param('catalogoId') catalogoId: string,
+    @Param('anio') anio: string,
+  ) {
+    const catalogoIdNum = parseInt(catalogoId, 10);
+    const anioNum = parseInt(anio, 10);
+    return this.catalogosService.obtenerPeriodicidadPorAnio(catalogoIdNum, anioNum);
   }
+
 
   @Patch(':id')
   @Permissions('ROL_GESTIONAR')

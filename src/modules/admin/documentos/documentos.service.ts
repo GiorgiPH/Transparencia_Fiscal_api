@@ -14,8 +14,6 @@ export class DocumentosService {
     private readonly fileUploadService: FileUploadService,
   ) {}
 
-
-
   async createWithFile(createDocumentoDto: CreateDocumentoDto, archivo: any, user: User) {
     // Verificar que el catálogo existe y permite documentos
     const catalogoIdNum = createDocumentoDto.catalogo_id;
@@ -48,15 +46,15 @@ export class DocumentosService {
       fecha_publicacion: createDocumentoDto.fecha_publicacion ? new Date(createDocumentoDto.fecha_publicacion) : null,
       institucion_emisora: 'Gobierno del Estado de Morelos',
       usuario_creacion_id: user.id,
-      periodo_numero:0,
+      periodo_numero: createDocumentoDto.periodo_numero || 0,
       catalogo: {
         connect: { id: createDocumentoDto.catalogo_id },
       },
 
-      periodicidad: Number(createDocumentoDto.periodicidad)
+      periodicidad: Number(createDocumentoDto.periodicidad_id)
       ? {
           connect: {
-            id: Number(createDocumentoDto.periodicidad)
+            id: Number(createDocumentoDto.periodicidad_id)
           }
         }
       : undefined
@@ -111,7 +109,6 @@ export class DocumentosService {
     return this.documentosRepository.findPublicDocuments(params);
   }
 
-  
   async updateWithFile(id: number, updateDocumentoDto: UpdateDocumentoDto, archivo: any, user: User) {
     const documento = await this.documentosRepository.findById(id);
     if (!documento) {
@@ -242,5 +239,69 @@ export class DocumentosService {
     return this.documentosRepository.count(where);
   }
 
-  
+  async obtenerDisponibilidadPorPeriodo(
+    catalogoId: number,
+    ejercicioFiscal: number,
+    periodoId?: number,
+  ) {
+    // Verificar que el catálogo existe
+    const catalogo = await this.catalogosRepository.findById(catalogoId);
+    if (!catalogo) {
+      throw new NotFoundException(`Catálogo con ID ${catalogoId} no encontrado`);
+    }
+
+    // Obtener todos los tipos de documento activos
+    const tiposDocumento = await this.documentosRepository.obtenerTiposDocumentoActivos();
+
+    // Obtener documentos activos para el catálogo, año y periodo específicos
+    const documentos = await this.documentosRepository.obtenerDocumentosPorPeriodo(
+      catalogoId,
+      ejercicioFiscal,
+      periodoId
+    );
+
+    // Crear un mapa para acceso rápido: tipo_documento_id -> documento
+    const documentosMap = new Map<number, { id: string, nombre: string }>();
+    
+    documentos.forEach(doc => {
+      // Solo guardar el primer documento encontrado por tipo (el más reciente)
+      if (!documentosMap.has(doc.tipo_documento_id)) {
+        documentosMap.set(doc.tipo_documento_id, {
+          id: doc.id.toString(),
+          nombre: doc.nombre!,
+        });
+      }
+    });
+
+    // Construir la respuesta de disponibilidad
+    const disponibilidadCatalogo = tiposDocumento.map(tipo => {
+      const extensiones = tipo.extensiones.split(',').map(ext => ext.trim());
+      const extensionPrincipal = extensiones[0] || tipo.nombre.toLowerCase();
+      
+      const documento = documentosMap.get(tipo.id);
+      const tieneDocumentos = !!documento;
+      
+      const disponibilidadDto: any = {
+        tipoDocumentoId: tipo.id,
+        nombre: tipo.nombre,
+        disponible: tieneDocumentos,
+        extension: extensionPrincipal,
+      };
+
+      // Si hay documento disponible, agregar su ID y nombre
+      if (documento) {
+        disponibilidadDto.documentoId = documento.id;
+        disponibilidadDto.documentoNombre = documento.nombre;
+      }
+
+      return disponibilidadDto;
+    });
+
+    return {
+      id: catalogo.id,
+      nombre: catalogo.nombre,
+      permite_documentos: catalogo.permite_documentos,
+      disponibilidadTiposDocumento: disponibilidadCatalogo
+    };
+  }
 }

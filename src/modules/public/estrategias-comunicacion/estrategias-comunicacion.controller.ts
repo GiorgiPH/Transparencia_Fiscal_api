@@ -32,6 +32,7 @@ import { UpdateRedSocialDto } from './dto/update-red-social.dto';
 import { Noticia } from './entities/noticia.entity';
 import { RedSocial } from './entities/red-social.entity';
 import { NoticiaCarouselDto } from './dto/noticia-carousel.dto';
+import { EstadisticasEstrategiasComunicacionResponseDto } from './dto/estadisticas-estrategias-comunicacion-response.dto';
 import { Public } from '../../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -384,8 +385,25 @@ export class EstrategiasComunicacionController {
   @ApiResponse({
     status: 200,
     description: 'Estadísticas del módulo',
+    type: EstadisticasEstrategiasComunicacionResponseDto,
   })
-  async getEstadisticas() {
+  async getEstadisticas(): Promise<EstadisticasEstrategiasComunicacionResponseDto> {
+    return this.estrategiasComunicacionService.getEstadisticas();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'CARGA', 'EDICION')
+  @Get('admin/estadisticas/total')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener estadísticas detalladas de estrategias de comunicación' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Estadísticas obtenidas exitosamente',
+    type: EstadisticasEstrategiasComunicacionResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
+  async getStats(): Promise<EstadisticasEstrategiasComunicacionResponseDto> {
     return this.estrategiasComunicacionService.getEstadisticas();
   }
 

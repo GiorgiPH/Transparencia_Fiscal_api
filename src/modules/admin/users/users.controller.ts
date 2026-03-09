@@ -28,6 +28,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserFormDto } from './dto/create-user-form.dto';
 import { UpdateUserFormDto } from './dto/update-user-form.dto';
+import { EstadisticasUsuariosResponseDto } from './dto/estadisticas-usuarios-response.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -262,6 +263,19 @@ export class UsersController {
   @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
   getSystemMetrics() {
     return this.usersService.getSystemMetrics();
+  }
+
+  @Get('estadisticas/total')
+  @ApiOperation({ summary: 'Obtener estadísticas detalladas de usuarios' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Estadísticas obtenidas exitosamente',
+    type: EstadisticasUsuariosResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
+  async getStats() {
+    return this.usersService.getEstadisticas();
   }
 
   @Get('permissions/matrix')

@@ -178,4 +178,52 @@ export class DocumentosRepository {
       },
     });
   }
+
+  async obtenerTiposDocumentoActivos(): Promise<any[]> {
+    return this.prisma.tipoDocumento.findMany({
+      where: {
+        activo: true,
+      },
+      select: {
+        id: true,
+        nombre: true,
+        extensiones: true,
+      },
+      orderBy: {
+        nombre: 'asc',
+      },
+    });
+  }
+
+  async obtenerDocumentosPorPeriodo(
+    catalogoId: number,
+    ejercicioFiscal: number,
+    periodoId?: number,
+  ): Promise<any[]> {
+    const where: any = {
+      catalogo_id: catalogoId,
+      ejercicio_fiscal: ejercicioFiscal,
+      activo: true,
+    };
+
+    // Si periodoId es undefined o null, buscar documentos anuales (periodo_numero = 0)
+    if (periodoId === undefined || periodoId === null) {
+      where.periodo_numero = 0;
+    } else {
+      where.periodo_numero = periodoId;
+    }
+
+    return this.prisma.documento.findMany({
+      where,
+      select: {
+        id: true,
+        catalogo_id: true,
+        tipo_documento_id: true,
+        nombre: true,
+      },
+      orderBy: {
+        fecha_creacion: 'desc',
+      },
+    });
+  }
 }

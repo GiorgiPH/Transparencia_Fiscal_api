@@ -173,11 +173,12 @@ export class CatalogosService {
       return [];
     }
 
-    // Obtener disponibilidad para catálogos que permiten documentos
-    const disponibilidadPorCatalogo = await this.obtenerDisponibilidadParaCatalogos(hijos);
-
-    // Mapear los hijos incluyendo disponibilidad
-    return hijos.map(catalogo => this.mapearCatalogoConDisponibilidad(catalogo, disponibilidadPorCatalogo));
+    // NO cargar disponibilidad de documentos aquí - se cargará solo cuando se seleccionen año y periodo
+    // Los documentos se cargarán mediante el endpoint /periodo con los parámetros correspondientes
+    return hijos.map(catalogo => ({
+      ...catalogo,
+      disponibilidadTiposDocumento: [] // Array vacío inicialmente
+    }));
   }
 
   async findTree(parentId?: number) {
@@ -289,23 +290,6 @@ export class CatalogosService {
     return this.mapearCatalogoConDisponibilidadRecursivamente(catalogo, children, disponibilidadPorCatalogo);
   }
 
-  async findDocumentAvailability(id: number) {
-    const catalogo = await this.catalogosRepository.findById(id);
-    if (!catalogo) {
-      throw new NotFoundException(`Catálogo con ID ${id} no encontrado`);
-    }
-
-    // Solo obtener disponibilidad para este catálogo específico
-    const disponibilidadPorCatalogo = await this.obtenerDisponibilidadParaCatalogos([catalogo]);
-    
-    return {
-      id: catalogo.id,
-      nombre: catalogo.nombre,
-      permite_documentos: catalogo.permite_documentos,
-      disponibilidadTiposDocumento: disponibilidadPorCatalogo.get(catalogo.id) || []
-    };
-  }
-
   private obtenerCatalogosConDocumentosRecursivamente(catalogos: any[]): any[] {
     const result: any[] = [];
     
@@ -380,5 +364,35 @@ export class CatalogosService {
       estadisticas.catalogosRaiz,
       estadisticas.catalogosConDocumentos,
     );
+  }
+
+  /**
+   * Obtiene la periodicidad de un catálogo para un año específico
+   */
+  async obtenerPeriodicidadPorAnio(catalogoId: number, anio: number): Promise<PeriodicidadResponseDto | null> {
+    // Primero verificar si el catálogo existe
+    const catalogo = await this.catalogosRepository.findById(catalogoId);
+    if (!catalogo) {
+      throw new NotFoundException(`Catálogo con ID ${catalogoId} no encontrado`);
+    }
+
+    // Consultar la tabla CatalogoPeriodicidadAnio para obtener la periodicidad configurada
+    const configuracionPeriodicidad = await this.prisma.catalogoPeriodicidadAnio.findFirst({
+      where: {
+        id_catalogo: catalogoId,
+        anio: anio,
+        activo: true,
+      },
+      include: {
+        periodicidad: true,
+      },
+    });
+    if (!configuracionPeriodicidad) {
+      // Si no hay configuración específica, devolver null
+      return null;
+    }
+
+    // Mapear la periodicidad a DTO
+    return this.mapearPeriodicidadADto(configuracionPeriodicidad.periodicidad);
   }
 }

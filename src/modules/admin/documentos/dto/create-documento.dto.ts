@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsBoolean, IsUUID, IsDateString, IsNumber, Min, Max, IsInt } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsDateString, IsNumber, Min, Max, IsInt } from 'class-validator';
 
 export class CreateDocumentoDto {
   @IsOptional()
@@ -24,9 +24,8 @@ export class CreateDocumentoDto {
     description: 'ID del catálogo al que pertenece el documento',
     example: 5,
   })
-  @Type(() => Number) // 🔑 CONVIERTE "9" → 9
-
-  @IsNumber({}, { message: 'El catalogo_id debe ser un número valido' })
+  @Type(() => Number)
+  @IsNumber({}, { message: 'El catalogo_id debe ser un número válido' })
   catalogo_id: number;
 
   @ApiProperty({
@@ -67,12 +66,12 @@ export class CreateDocumentoDto {
 
   @ApiProperty({
     description: 'ID del tipo de documento (CSV, JSON, XML, Excel)',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 1,
     required: false,
   })
   @IsOptional()
-  @Type(() => Number) // 🔑 CONVIERTE "9" → 9
-  @IsNumber({}, { message: 'El tipo_documento_id debe ser un UUID válido' })
+  @Type(() => Number)
+  @IsNumber({}, { message: 'El tipo_documento_id debe ser un número válido' })
   tipo_documento_id?: number;
 
   @ApiProperty({
@@ -90,8 +89,7 @@ export class CreateDocumentoDto {
     required: false,
   })
   @IsOptional()
-  @Type(() => Number) // 🔑 CONVIERTE "9" → 9
-
+  @Type(() => Number)
   @IsNumber({}, { message: 'El año fiscal debe ser un número' })
   @Min(2000, { message: 'El año fiscal debe ser mayor o igual a 2000' })
   @Max(2100, { message: 'El año fiscal debe ser menor o igual a 2100' })
@@ -107,13 +105,26 @@ export class CreateDocumentoDto {
   palabras_clave?: string;
 
   @ApiProperty({
-    description: 'Periodicidad del documento',
-    example: 'anual, mensual',
+    description: 'ID de la periodicidad del documento',
+    example: 1,
     required: false,
   })
-  @IsString({ message: 'Las palabras clave deben ser una cadena de texto' })
-  periodicidad?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'El ID de periodicidad debe ser un número' })
+  periodicidad_id?: number;
 
+  @ApiProperty({
+    description: 'Número del periodo (1-12 para mensual, 1-6 para bimestral, etc.)',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: 'El número del periodo debe ser un entero' })
+  @Min(1, { message: 'El número del periodo debe ser al menos 1' })
+  @Max(12, { message: 'El número del periodo no puede ser mayor a 12' })
+  periodo_numero?: number;
 
   @ApiProperty({
     description: 'Indica si el documento es público',
@@ -126,11 +137,11 @@ export class CreateDocumentoDto {
   es_publico?: boolean;
 
   @ApiProperty({
-    description: 'insitutcion qiue emitio el documento',
-    example: 'plan, desarrollo, estatal, 2024',
+    description: 'Institución que emitió el documento',
+    example: 'Secretaría de Hacienda',
     required: false,
   })
   @IsOptional()
-  @IsString({ message: 'error' })
+  @IsString({ message: 'La institución emisora debe ser una cadena de texto' })
   institucion_emisora?: string;
 }

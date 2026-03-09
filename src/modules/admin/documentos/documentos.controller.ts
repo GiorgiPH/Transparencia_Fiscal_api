@@ -90,8 +90,6 @@ export class DocumentosController {
     return this.documentosService.findAll(params);
   }
 
-  
-
   @Get('catalogo/:catalogoId')
   @Permissions('REPORTE_VER')
   @ApiOperation({ summary: 'Obtener documentos por catálogo' })
@@ -116,6 +114,32 @@ export class DocumentosController {
     return this.documentosService.findByCatalogoId(catalogoIdNum, params);
   }
 
+  @Get('periodo')
+  @Permissions('REPORTE_VER')
+  @ApiOperation({ summary: 'Obtener disponibilidad de documentos por catálogo, año y periodo' })
+  @ApiQuery({ name: 'catalogoId', required: true, type: Number, description: 'ID del catálogo' })
+  @ApiQuery({ name: 'ejercicioFiscal', required: true, type: Number, description: 'Año fiscal' })
+  @ApiQuery({ name: 'periodoId', required: false, type: Number, description: 'ID del periodo (0 para anual)' })
+  @ApiResponse({ status: 200, description: 'Disponibilidad de documentos obtenida exitosamente' })
+  @ApiResponse({ status: 400, description: 'Parámetros inválidos' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
+  @ApiResponse({ status: 404, description: 'Catálogo no encontrado' })
+  obtenerDisponibilidadPorPeriodo(
+    @Query('catalogoId') catalogoId: string,
+    @Query('ejercicioFiscal') ejercicioFiscal: string,
+    @Query('periodoId') periodoId?: string,
+  ) {
+    const catalogoIdNum = parseInt(catalogoId, 10);
+    const ejercicioFiscalNum = parseInt(ejercicioFiscal, 10);
+    const periodoIdNum = periodoId ? parseInt(periodoId, 10) : undefined;
+    
+    return this.documentosService.obtenerDisponibilidadPorPeriodo(
+      catalogoIdNum,
+      ejercicioFiscalNum,
+      periodoIdNum
+    );
+  }
 
   @Get('buscar')
   @Permissions('REPORTE_VER')
@@ -206,16 +230,5 @@ export class DocumentosController {
   getStatsByCatalogo(@Param('catalogoId') catalogoId: string) {
     const catalogoIdNum = parseInt(catalogoId, 10);
     return this.documentosService.getStatsByCatalogo(catalogoIdNum);
-  }
-
-  @Get('estadisticas/total')
-  @Permissions('REPORTE_VER')
-  @ApiOperation({ summary: 'Obtener estadísticas generales de documentos' })
-  @ApiResponse({ status: 200, description: 'Estadísticas obtenidas exitosamente' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
-  async getStats() {
-    const total = await this.documentosService.count({ activo: true });
-    return { total };
   }
 }

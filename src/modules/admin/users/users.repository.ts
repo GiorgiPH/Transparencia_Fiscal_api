@@ -318,6 +318,111 @@ export class UsersRepository {
     });
   }
 
+  async getEstadisticas(): Promise<{
+    totalUsuariosActivos: number;
+    totalUsuariosInactivos: number;
+    totalUsuariosAdmin: number;
+    totalUsuariosCarga: number;
+    totalUsuariosEdicion: number;
+    totalUsuariosCon2FA: number;
+    totalUsuariosConFotoPerfil: number;
+    totalUsuariosConDependencia: number;
+    totalUsuariosUltimoMes: number;
+  }> {
+    // Total usuarios activos e inactivos
+    const totalUsuariosActivos = await this.prisma.user.count({
+      where: { activo: true },
+    });
+
+    const totalUsuariosInactivos = await this.prisma.user.count({
+      where: { activo: false },
+    });
+
+    // Usuarios por rol
+    const usuariosAdmin = await this.prisma.user.count({
+      where: {
+        roles: {
+          some: {
+            rol: {
+              nombre: 'ADMIN',
+            },
+          },
+        },
+      },
+    });
+
+    const usuariosCarga = await this.prisma.user.count({
+      where: {
+        roles: {
+          some: {
+            rol: {
+              nombre: 'CARGA',
+            },
+          },
+        },
+      },
+    });
+
+    const usuariosEdicion = await this.prisma.user.count({
+      where: {
+        roles: {
+          some: {
+            rol: {
+              nombre: 'EDICION',
+            },
+          },
+        },
+      },
+    });
+
+    // Usuarios con 2FA habilitado
+    const totalUsuariosCon2FA = await this.prisma.user.count({
+      where: { requiere_2fa: true },
+    });
+
+    // Usuarios con foto de perfil
+    const totalUsuariosConFotoPerfil = await this.prisma.user.count({
+      where: {
+        foto_perfil: {
+          not: null,
+        },
+      },
+    });
+
+    // Usuarios con dependencia asignada
+    const totalUsuariosConDependencia = await this.prisma.user.count({
+      where: {
+        dependenciaId: {
+          not: null,
+        },
+      },
+    });
+
+    // Usuarios creados en el último mes
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    
+    const totalUsuariosUltimoMes = await this.prisma.user.count({
+      where: {
+        fecha_creacion: {
+          gte: lastMonth,
+        },
+      },
+    });
+
+    return {
+      totalUsuariosActivos,
+      totalUsuariosInactivos,
+      totalUsuariosAdmin: usuariosAdmin,
+      totalUsuariosCarga: usuariosCarga,
+      totalUsuariosEdicion: usuariosEdicion,
+      totalUsuariosCon2FA,
+      totalUsuariosConFotoPerfil,
+      totalUsuariosConDependencia,
+      totalUsuariosUltimoMes,
+    };
+  }
+
   private generateTemporaryPassword(): string {
     const length = 12;
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';

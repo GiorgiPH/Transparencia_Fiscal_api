@@ -111,7 +111,8 @@ model Catalogo {
   parent              Catalogo?   @relation("CatalogoParent", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children            Catalogo[]  @relation("CatalogoParent")
   documentos          Documento[]
-
+ // NUEVA RELACION
+  catalogoPeriodicidades CatalogoPeriodicidadAnio[]
   @@map("catalogos")
 }
 
@@ -260,6 +261,27 @@ model Periodicidad {
   nombre_portal     String      @map("nombre_portal")
   NombrePortal      String?     @db.VarChar(500)
   documentos        Documento[]
+   // NUEVA RELACION
+  catalogoPeriodicidades CatalogoPeriodicidadAnio[]
 
   @@map("periodicidades")
+}
+
+model CatalogoPeriodicidadAnio {
+  id                Int       @id @default(autoincrement())
+
+  id_catalogo        Int       @map("id_catalogo")
+  anio              Int       @map("anio")
+  id_periodicidad    Int       @map("id_periodicidad")
+
+  fecha_creacion     DateTime  @default(now()) @map("fecha_creacion")
+  usuario_registro   Int?      @map("usuario_registro")
+
+  activo            Boolean   @default(true) @map("activo")
+
+  periodicidad      Periodicidad @relation(fields: [id_periodicidad], references: [id])
+  // opcional si tienes modelo Catalogo:
+  catalogo       Catalogo @relation(fields: [id_catalogo], references: [id])
+
+  @@map("CatalogoPeriodicidadAnio")
 }
