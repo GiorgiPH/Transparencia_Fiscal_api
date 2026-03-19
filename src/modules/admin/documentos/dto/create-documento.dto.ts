@@ -122,7 +122,7 @@ export class CreateDocumentoDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt({ message: 'El número del periodo debe ser un entero' })
-  @Min(1, { message: 'El número del periodo debe ser al menos 1' })
+  @Min(0, { message: 'El número del periodo debe ser al menos 0' })
   @Max(12, { message: 'El número del periodo no puede ser mayor a 12' })
   periodo_numero?: number;
 

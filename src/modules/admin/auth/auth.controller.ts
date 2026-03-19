@@ -19,6 +19,8 @@ import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { ForgotPasswordRequestDto, ForgotPasswordResponseDto } from './dto/forgot-password.dto';
+import { ResetPasswordRequestDto, ResetPasswordResponseDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { Public } from '../../../common/decorators/public.decorator';
 
@@ -106,6 +108,46 @@ export class AuthController {
   })
   async logout(@Body('refreshToken') refreshToken: string) {
     return this.authService.logout(refreshToken);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Solicitar restablecimiento de contraseña' })
+  @ApiBody({ type: ForgotPasswordRequestDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Solicitud procesada exitosamente',
+    type: ForgotPasswordResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Datos de entrada inválidos',
+  })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordRequestDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restablecer contraseña con token' })
+  @ApiBody({ type: ResetPasswordRequestDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Contraseña restablecida exitosamente',
+    type: ResetPasswordResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Token inválido, expirado o datos de entrada inválidos',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Usuario inactivo o error en el proceso',
+  })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordRequestDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 
   @Get('profile')

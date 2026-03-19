@@ -12,7 +12,7 @@ export class UrlUtilsService {
    */
   getApiBaseUrl(): string {
     const storage = this.configService.get<StorageConfig>('storage');
-    return storage?.apiBaseUrl || `http://localhost:${this.configService.get('PORT') || '3001'}`;
+    return storage?.apiBaseUrl || `https://app.administracionyfinanzas.morelos.gob.mx/transparencia-fiscal-api`;
   }
 
   /**

@@ -7,26 +7,27 @@ datasource db {
 }
 
 model User {
-  id                       Int                @id @default(autoincrement()) @map("id")
-  email                    String             @unique @map("login")
-  password                 String             @map("password_hash")
+  id                       Int                   @id @default(autoincrement()) @map("id")
+  email                    String                @unique @map("login")
+  password                 String                @map("password_hash")
   name                     String?
-  foto_perfil              String?            @map("foto_perfil")
-  area_departamento        String?            @map("area_departamento")
-  telefono                 String?            @map("telefono")
-  requiere_2fa             Boolean            @default(false) @map("requiere_2fa")
-  activo                   Boolean            @default(true) @map("activo")
-  ultimo_acceso            DateTime?          @map("ultimo_acceso")
-  fecha_creacion           DateTime           @default(now()) @map("fecha_creacion")
-  fecha_modificacion       DateTime           @updatedAt @map("fecha_modificacion")
-  fecha_ultimo_cambio_pass DateTime?          @map("fecha_ultimo_cambio_pass")
-  usuario_creacion_id      Int?               @map("usuario_creacion_id")
-  usuario_modif_id         Int?               @map("usuario_modif_id")
-  dependenciaId            Int?               @map("institucion_id")
+  foto_perfil              String?               @map("foto_perfil")
+  area_departamento        String?               @map("area_departamento")
+  telefono                 String?               @map("telefono")
+  requiere_2fa             Boolean               @default(false) @map("requiere_2fa")
+  activo                   Boolean               @default(true) @map("activo")
+  ultimo_acceso            DateTime?             @map("ultimo_acceso")
+  fecha_creacion           DateTime              @default(now()) @map("fecha_creacion")
+  fecha_modificacion       DateTime              @updatedAt @map("fecha_modificacion")
+  fecha_ultimo_cambio_pass DateTime?             @map("fecha_ultimo_cambio_pass")
+  usuario_creacion_id      Int?                  @map("usuario_creacion_id")
+  usuario_modif_id         Int?                  @map("usuario_modif_id")
+  dependenciaId            Int?                  @map("institucion_id")
   refreshTokens            RefreshToken[]
-  dependencia              Dependencia?       @relation(fields: [dependenciaId], references: [id], onUpdate: NoAction)
+  dependencia              Dependencia?          @relation(fields: [dependenciaId], references: [id], onUpdate: NoAction)
   roles                    UsuarioRol[]
   verificationCodes        VerificationCode[]
+  resetPasswordTokens      ResetPasswordToken[]
 
   @@map("users")
 }
@@ -284,4 +285,17 @@ model CatalogoPeriodicidadAnio {
   catalogo       Catalogo @relation(fields: [id_catalogo], references: [id])
 
   @@map("CatalogoPeriodicidadAnio")
+}
+
+model ResetPasswordToken {
+  id                Int       @id @default(autoincrement()) @map("id")
+  token             String    @map("Token") @db.VarChar(512)
+  usuario_id        Int       @map("fkdms_c_usuario") @db.SmallInt
+  fecha_creacion    DateTime  @default(now()) @map("Fecha_creacion")
+  fecha_expiracion  DateTime  @map("Fecha_expiracion")
+  usado             Boolean   @default(false) @map("Usado")
+  fecha_uso         DateTime? @map("Fecha_uso")
+  usuario           User      @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@map("reset_password_tokens")
 }

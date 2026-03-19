@@ -271,6 +271,89 @@ export class MailService implements IMailService, OnModuleInit {
     return templates[templateName] || `<p>${JSON.stringify(context)}</p>`;
   }
 
+  async sendResetPasswordEmail(
+    nombre: string,
+    correo: string,
+    resetUrl: string,
+  ): Promise<void> {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Restablecer Contraseña</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.8; color: #333; max-width: 650px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
+          .header { background: linear-gradient(135deg, #1a5276 0%, #2c3e50 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 10px 10px 0 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .content { background-color: white; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
+          .footer { margin-top: 30px; text-align: center; font-size: 13px; color: #6c757d; padding-top: 20px; border-top: 1px solid #dee2e6; }
+          .highlight { background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); padding: 25px; border-radius: 8px; margin: 30px 0; border-left: 5px solid #ffc107; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+          .button { display: inline-block; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white !important; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .warning { background-color: #f8d7da; padding: 15px; border-radius: 8px; border-left: 5px solid #dc3545; margin: 20px 0; }
+          .signature { margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1 style="margin: 0; font-size: 28px;">🔐 Restablecer Contraseña</h1>
+          <h2 style="margin: 10px 0 0 0; font-size: 18px; font-weight: 300;">Portal de Transparencia Fiscal</h2>
+          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Gobierno del Estado de Morelos</p>
+        </div>
+        
+        <div class="content">
+          <p style="font-size: 18px;">Estimado(a) <strong style="color: #1a5276;">${nombre}</strong>,</p>
+          
+          <p>Hemos recibido una solicitud para restablecer la contraseña de su cuenta en el Portal de Transparencia Fiscal.</p>
+          
+          <div class="highlight">
+            <p style="margin: 0; font-size: 16px; line-height: 1.6;">
+              <strong style="color: #856404;">⏰ Este enlace expirará en 15 minutos</strong><br><br>
+              Por motivos de seguridad, el enlace de restablecimiento tiene una validez limitada. Si no completa el proceso dentro de este tiempo, deberá solicitar un nuevo enlace.
+            </p>
+          </div>
+          
+          <p style="text-align: center;">
+            <a href="${resetUrl}" class="button">Restablecer mi contraseña</a>
+          </p>
+          
+          <p>Si el botón anterior no funciona, copie y pegue el siguiente enlace en su navegador:</p>
+          <p style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; word-break: break-all; font-size: 14px; color: #6c757d;">
+            ${resetUrl}
+          </p>
+          
+          <div class="warning">
+            <p style="margin: 0;"><strong>⚠️ Importante:</strong></p>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+              <li>Si usted <strong>NO</strong> solicitó este cambio, ignore este correo.</li>
+              <li>Su contraseña actual permanecerá sin cambios.</li>
+              <li>Por seguridad, nunca comparta este enlace con nadie.</li>
+            </ul>
+          </div>
+          
+          <div class="signature">
+            <p style="margin: 0 0 5px 0;">Atentamente,</p>
+            <p style="margin: 0; font-size: 18px; color: #1a5276; font-weight: bold;">Equipo de Seguridad</p>
+            <p style="margin: 5px 0 0 0; font-size: 15px;">Portal de Transparencia Fiscal</p>
+            <p style="margin: 5px 0 0 0; font-size: 15px; font-weight: bold;">Gobierno del Estado de Morelos</p>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p style="margin: 5px 0;">Este es un mensaje automático de seguridad. Por favor, no responda a este correo.</p>
+          <p style="margin: 5px 0; font-size: 11px; color: #adb5bd;">© ${new Date().getFullYear()} Portal de Transparencia Fiscal - Gobierno del Estado de Morelos.</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await this.sendMail({
+      to: correo,
+      subject: '🔐 Restablecer contraseña - Portal de Transparencia Fiscal',
+      html,
+    });
+  }
+
   async sendParticipacionCiudadanaConfirmacion(
     nombre: string,
     correo: string,
