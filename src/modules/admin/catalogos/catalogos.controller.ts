@@ -32,9 +32,9 @@ import { TransformInterceptor } from '../../../common/interceptors/response.inte
 import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('Catalogos')
-@ApiBearerAuth()
+//@ApiBearerAuth()
 @Controller('admin/catalogos')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+//@UseGuards(JwtAuthGuard, PermissionsGuard)
 @UseInterceptors(TransformInterceptor)
 @UseInterceptors(ClassSerializerInterceptor)
 export class CatalogosController {
@@ -145,12 +145,12 @@ export class CatalogosController {
   }
 
   @Get(':catalogoId/periodos/:anio')
-  @Permissions('REPORTE_VER')
+  //@Permissions('REPORTE_VER')
   @ApiOperation({ summary: 'Obtener periodicidad de un catálogo para un año específico' })
   @ApiParam({ name: 'catalogoId', description: 'ID del catálogo' })
   @ApiParam({ name: 'anio', description: 'Año fiscal' })
   @ApiResponse({ status: 200, description: 'Periodicidad obtenida exitosamente' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
+  //@ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Permisos insuficientes' })
   @ApiResponse({ status: 404, description: 'Catálogo no encontrado' })
   obtenerPeriodicidadPorAnio(

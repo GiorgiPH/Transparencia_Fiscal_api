@@ -33,9 +33,9 @@ import { TransformInterceptor } from '../../../common/interceptors/response.inte
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Documentos')
-@ApiBearerAuth()
+//@ApiBearerAuth()
 @Controller('admin/documentos')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+//@UseGuards(JwtAuthGuard, PermissionsGuard)
 @UseInterceptors(TransformInterceptor)
 @UseInterceptors(ClassSerializerInterceptor)
 export class DocumentosController {
@@ -115,7 +115,7 @@ export class DocumentosController {
   }
 
   @Get('periodo')
-  @Permissions('REPORTE_VER')
+  //@Permissions('REPORTE_VER')
   @ApiOperation({ summary: 'Obtener disponibilidad de documentos por catálogo, año y periodo' })
   @ApiQuery({ name: 'catalogoId', required: true, type: Number, description: 'ID del catálogo' })
   @ApiQuery({ name: 'ejercicioFiscal', required: true, type: Number, description: 'Año fiscal' })

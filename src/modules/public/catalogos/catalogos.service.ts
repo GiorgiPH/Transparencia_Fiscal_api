@@ -152,7 +152,7 @@ export class CatalogosService {
     }
 
     // Obtener disponibilidad para catálogos que permiten documentos
-    const disponibilidadPorCatalogo = await this.obtenerDisponibilidadParaCatalogos(hijos);
+    const disponibilidadPorCatalogo =await this.obtenerDisponibilidadParaCatalogos(hijos);
 
     // Mapear los hijos al DTO de respuesta
     return hijos.map(catalogo => this.mapearCatalogoADto(catalogo, disponibilidadPorCatalogo));
